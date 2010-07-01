@@ -29,7 +29,9 @@ character string representing the date format with which to display
 the \code{mondate}. 
 The default.displayFormat is determined according to Sys.getlocale("LC_TIME"):
 if it contains the words "United States", the default will be 
-"\%m/\%d/\%Y" (MM/DD/YYYY), otherwise "\%Y-\%m-\%d" (YYYY-MM-DD). 
+"\%m/\%d/\%Y" 
+\cr
+(MM/DD/YYYY), otherwise "\%Y-\%m-\%d" (YYYY-MM-DD). 
 Other choices are "\%m-\%d-\%Y" and "\%Y/\%m/\%d".
 }
   \item{timeunits}{
@@ -63,7 +65,7 @@ in which case the value is calculated using \code{as.Date}.
 }
 \item{\code{signature(x = "POSIXt")}}{
 For a date x, \code{as.POSIXlt} is used to convert to an ISO standard date,
-from whence the number of months of that day since the beginning of the
+from which the number of months of that day since the beginning of the
 millennium is calculated. 
 }
 
@@ -73,7 +75,8 @@ that format is used with
 \code{as.Date} to convert to a \code{mondate}.
 If \code{displayFormat} is not provided, 
 an attempt is made to convert to a date
-using the default.displayFormat. If unsuccessful, then each of the four 
+using the default.displayFormat. 
+If unsuccessful, then each of the four 
 optional \code{displayFormat}s (see \code{displayFormat} above) 
 is attempted for conversion to a date, 
 and the successful format is retained as that \code{mondate}'s 
@@ -87,17 +90,21 @@ to a \code{mondate}.
 }
 
 \item{\code{signature(x = "mondate")}}{
-For \code{mondate} x, this would be the way to change
-the \code{mondate}'s \code{displayFormat} or \code{timeunits}.
+For \code{mondate} x, this could be a way to copy a \code{mondate}
+and perehaps change 
+the \code{mondate}'s \code{displayFormat} or \code{timeunits} slots
+in the process.
 }
 
 \item{\code{signature(x = "array")}}{
-Used to preserve array attributes, after which other signatures take over.
+If an object \code{x} is an \code{array}, 
+then this method enables the \code{mondate} to inherit its shape. 
+After that, other "signatures" take over.
 }
 
 \item{\code{signature(x = "ANY")}}{
 For any other class of x an attempt will be made to convert
-to \code{Date} ("\code{as.Date}"). 
+to \code{Date} ("\code{as.Date(x)}"). 
 If unsuccessful, an attempt will be made to convert to \code{numeric};
 if successful, a warning will be issued to check the results
 relative to the \code{numeric} conversion, otherwise execution will

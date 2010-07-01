@@ -21,17 +21,18 @@ Inherits \code{data}'s properties.
 See \code{\link{array}} for further details.
 }
 
-\item{\code{matrix(data, nrow, ncol, byrow=FALSE, dimnames=NULL)}}{
+\item{\code{matrix(data="mondate", nrow, ncol, byrow=FALSE, dimnames=NULL)}}{
 Shapes \code{data} as a matrix. 
 Inherits \code{data}'s properties.
 See \code{\link{matrix}} for further details.
 }
 }}
 \examples{
-(M<-mondate.mdy(12,31,2000:2009)) # 10 year-ends
-# rows representing (actuarial) accident years, every other year
-matrix(M, nrow=5, ncol=2, dimnames=list(AccYrs=LETTERS[1:5],
-          YearBounds=c("Begin","End")), byrow=TRUE)
+(M<-mondate.mdy(12,31,2006:2010, timeunits="years")) # 5 year-ends
+# rows representing (actuarial) accident years
+matrix(c(M,M+1), nrow=5, 
+        dimnames=list(AccYrs=LETTERS[1:5],
+        YearBounds=c("Begin","End")))
 # the first 27 days of 2000 in a three-dimensional array
 array(mondate(1:27, timeunits="days"), rep(3,3))
 }

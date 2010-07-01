@@ -2,66 +2,87 @@
 \docType{methods}
 \alias{c-methods}
 \alias{c,mondate-method}
-\alias{cbind.mondate}
-\alias{cbind}
-\alias{cbind-methods}
-\alias{cbind,ANY-method}
-\alias{cbind,mondate-method}
-\alias{rbind.mondate}
 \alias{rep-methods}
 \alias{rep,mondate-method}
+\alias{cbindMondate}
+\alias{rbindMondate}
 \title{Methods for Combining Mondates}
 \description{
 Methods to combine \code{mondate}s.
 }
+\usage{
+cbindMondate(\dots, deparse.level=1)
+rbindMondate(\dots, deparse.level=1)
+}
+\arguments{
+\item{\dots}{
+R objects
+that will be coerced to a \code{mondate}.
+}
+\item{deparse.level}{
+See the \code{base} functions for details.
+}
+}
+\details{
+The \code{cbindMondate} and \code{rbindMondate} functions 
+use the \code{base} \code{cbind} and \code{rbind} functions,
+respectively,
+to combine the arguments.
+If the first argument in \code{\dots} is not a \code{mondate},
+that combination is the value returned.
+If the first argument in \code{\dots} is a \code{mondate},
+the combination is converted to a \code{mondate}
+with \code{displayFormat} and \code{timeunits} properties
+equal to those of the first argument
+(see method \code{mondate} to see how the conversion
+takes place depending on \code{timeunits}; an example is below).
+}
 \section{Methods}{
 \describe{
-\item{\code{c(x = "mondate", ...)}}{
-combine \code{mondate}s. \code{\dots} can be any R object(s) that can
+\item{\code{c(x = "mondate", \dots)}}{
+combine \code{mondate}s into a \code{vector}. 
+\code{\dots} any R object(s) that can
 be coerced to a \code{mondate}.
+The behavior mimics that of the \code{base} function.
 The result will be a \code{mondate} with properties equal to those of 
 \code{x}.
 }
 
-\item{\code{cbind}/\code{rbind(...)}}{
-Take a sequence of arguments \code{\dots},
-at least one of which is a \code{mondate},
-and combine by columns/rows.
-The result will be a \code{mondate} with properties equal to those of 
-\code{x}.
-Non-\code{mondate} arguments will be coerced to a \code{mondate},
-if necessary using the \code{timeunits} of the first \code{mondate} in
-\code{\dots}.
-}
-
-\item{\code{rep(...)}}{
-Replicates \code{mondate}s.
+\item{\code{rep(x = "mondate", \dots)}}{
+Replicates a \code{mondate}.
+The behavior mimics that of the \code{base} function.
 See \code{\link{rep}} for further details.
+The result will be a \code{mondate} with properties equal to those of 
+\code{x}.
 }
 }}
+\value{
+A \code{mondate}. 
+For \code{cbind} and \code{rbind}, a \code{matrix}.
+For \code{c} and \code{rep}, a \code{vector}.
+}
 \examples{
-M   <-mondate.mdy(6,30,2006:2010)
-Myrs<-mondate.mdy(6,30,2006:2010,timeunits="years") 
-c(M,   Myrs) # will be in "months"
-c(Myrs,M   ) # will be in "years"
-
+x <- mondate(1:6) # first 6 month-ends of the year 2000
+c(x,x+6)          # all month-ends of 2000
+c(0,x)            # result is "numeric", determined by the first argument
 M<-mondate.ymd(2001:2005,12,31) # 5 year-ends
 names(M)<-LETTERS[1:5]
-M
-cbind(begin=M-12,end=M) # 5 pairs of year boundary-dates
-begin<-mondate(M-12,timeunits="years")
-cbind(begin=begin,end=M) # same dates, but timeunits is in years
-cbind(Year2End=2,begin=begin,end=M) # Since 'begin' is first mondate in
-                                    # argument list, timeunits of result
-                                    # will be in "years." Therefore, 
-                                    # column 1 dates are 2 years after 
-                                    # the beginning of the millennium.
-cbind(as.Date("2000-1-1"),M) # displayFormat of the result will be that of M
+rbindMondate(M,M)
+begin_date <- M-12
+cbindMondate(begin_date,end_date=M) # 5 pairs of year boundary-dates
 
-rep(mondate("2-14-2010"), 3)
-M<-seq(from=mondate("1/1/2010"),length=2) # Jan. and Feb. 1st
+# Examples of "cbind-ing" mondates with numerics
+cbindMondate(begin_date, 1:5) # second column = first 5 month-ends of 2000
+mondateTimeunits(begin_date)<-"years"
+cbindMondate(begin_date, 1:5) # since the intention now is to measure time in years,
+                              # the second column = year-ends 2000...2004
+
+rbindMondate(end_date=M, begin_date)
+
+rep(mondate("2010-2-14"), 3)
+
+(M<-seq(from=mondate("1/1/2010"),length=2)) # Jan. and Feb. 1st
 rep(M,3)                                  # three pairs
-rep(M,length.out=5)                       # ends with Jan. 1
 rep(M,each=3)                             # three Jan.'s, three Feb.'s
 }
 \keyword{methods}

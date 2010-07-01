@@ -42,10 +42,7 @@ so which of the two months do you choose as the yardstick?
 Since changes in accounts over the course of a month, quarter and year
 are the amounts by which financial results are measured,
 it is important to be able to measure the passage of time 
-where a year is comprised of twelve months of equal accounting weight.
-Furthermore, financial and actuarial modeling is facilitated if
-the passage of time is represented as a continuously
-differentiable function.
+where a year is comprised of twelve months of equal "accounting weight."
 
 That gives rise to a date as measured in months, coined "mondate".
 
@@ -83,8 +80,10 @@ A \code{mondate} has two important properties (in S4 parlance, "slots").
 The first is \code{displayFormat} which is the format 
 of the date when the \code{mondate} is printed or \code{show}n.
 The other is \code{timeunits} which is the "units" reported 
-(usually "months") 
 when date arithmetic is performed.
+The default units is "months", but "years" and "days" are also allowed, 
+in which case the difference of two dates, say, would be reported
+in "years" or "days", respectively.
 
 }
 \section{Objects from the Class}{
@@ -93,7 +92,21 @@ Objects can be created by calls of the form \code{mondate(x, ...)}.
 \section{Slots}{
   \describe{
     \item{\code{.Data}:}{Object of class \code{"numeric"} or a numeric array }
-    \item{\code{displayFormat}:}{Object of class \code{"character"}}
+    \item{\code{displayFormat}:}{Object of class \code{"character"}.
+    The is the format of the date when displayed. 
+    Currently, there are four choices:
+    \enumerate{
+    \item "%m/%d/%Y"
+    \item "%m-%d-%Y"
+    \item "%Y-%m-%d"
+    \item "%Y/%m/%d"
+    }
+    Currently, by default a "United States" locale will use the first choice,
+    otherwise the default will be the third choice.
+    Also, by default, a character date coerced to a \code{mondate}
+    will read the format of the character date and store that
+    format in the \code{displayFormat} unless explicitly overridden.
+    }
     \item{\code{timeunits}:}{Object of class \code{"character"}}
     There are three options:
     \describe{

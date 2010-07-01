@@ -4,6 +4,13 @@
 
 ### - Dan Murphy, June 1, 2010
 
+##    Copyright (C) <2010>  <Daniel Murphy>
+
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
 ##  SCALARS
 
 .mondate.tolerance <- .Machine$double.eps^0.5
@@ -41,12 +48,12 @@
 
 ##  THE CLASS
 
-setClassUnion(".numarray",c("numeric","array"))
+setClassUnion("numarray",c("numeric","array"))
 setClass("mondate",
     representation(
         displayFormat="character",
         timeunits="character"),
-    contains=".numarray",
+    contains="numarray",
     prototype=prototype(
         numeric(0),
         displayFormat=.default.displayFormat,
@@ -55,6 +62,25 @@ setClass("mondate",
     )
 
 ## S4 METHODS
+
+## SLOT ACCESS
+setGeneric("mondateDisplayFormat", function(x) standardGeneric("mondateDisplayFormat"))
+setMethod("mondateDisplayFormat","mondate", function(x) x@displayFormat)
+setMethod("mondateDisplayFormat","ANY", function(x) NULL)
+setGeneric("mondateDisplayFormat<-",function(x,value) standardGeneric("mondateDisplayFormat<-"))
+setReplaceMethod("mondateDisplayFormat", "mondate", function(x, value) { 
+    x@displayFormat <- value
+    x 
+    })
+
+setGeneric("mondateTimeunits", function(x) standardGeneric("mondateTimeunits"))
+setMethod("mondateTimeunits","mondate", function(x) x@timeunits)
+setMethod("mondateTimeunits","ANY", function(x) NULL)
+setGeneric("mondateTimeunits<-",function(x,value) standardGeneric("mondateTimeunits<-"))
+setReplaceMethod("mondateTimeunits", "mondate", function(x, value) { 
+    x@timeunits <- value
+    x 
+    })
 
 # CONVERSION TO MONDATE
 
@@ -126,7 +152,7 @@ setMethod("mondate", "array", function(x, displayFormat, timeunits, ...) {
     dims <- dim(x)
     dimnams <- dimnames(x)
     dim(x) <- NULL
-    y<-mondate(x, displayFormat=displayFormat, timeunits=timeunits, ...) 
+    y<-callNextMethod()
     dim(y) <- dims
     dimnames(y) <- dimnams
     y
@@ -145,6 +171,10 @@ setMethod("mondate", "ANY", function(x, displayFormat, timeunits, ...) {
         )
     mondate(y, displayFormat=displayFormat, timeunits=timeunits)
     })
+
+# Finally, if users have an S3 class for which a coerce-to-mondate
+#   method has been written (e.g., as.mondate.foo) this will enable it.
+#as.mondate <- function(x,...) UseMethod("as.mondate")
 
 # CONVERSION FROM MONDATE
 
@@ -211,7 +241,7 @@ setMethod("Arith",c("mondate","mondate"),function(e1,e2) {
     else {
         timeunits <- e1@timeunits
         if (timeunits!=e2@timeunits) 
-            warning("Unequal timeunits, using first mondate's", timeunits)
+            warning("Unequal timeunits, using first mondate's= ", timeunits)
         if (timeunits=="months") 
             x<-callGeneric(unclass(e1),unclass(e2))
         else
@@ -254,7 +284,6 @@ setMethod("unique","mondate", function(x, incomparables=F, ...)
     )
 
 ## COMBINING, EXTRACTING, SHAPING, ETC.
-
 setMethod("c", "mondate", function(x, ..., recursive=FALSE) {
     L<-list(...)
     if (length(L)>0L) 
@@ -262,7 +291,7 @@ setMethod("c", "mondate", function(x, ..., recursive=FALSE) {
                        displayFormat=x@displayFormat, 
                        timeunits=x@timeunits)
     else
-        new("mondate", getDataPart(x), 
+        new("mondate", c(getDataPart(x)), 
                        displayFormat=x@displayFormat, 
                        timeunits=x@timeunits)
 
@@ -274,7 +303,7 @@ setMethod("[", "mondate", function(x, i, j, ..., drop)
     )
 
 setMethod("rep", "mondate", function(x, ...)
-    mondate(callNextMethod(as.numeric(x), ...), 
+    mondate(callNextMethod(x@.Data, ...), 
             displayFormat=x@displayFormat, timeunits=x@timeunits)
     )
 
@@ -287,24 +316,29 @@ setMethod("array","mondate",
     })
 
 setGeneric("matrix")
-setMethod("matrix","mondate",                                                    
-          function(data, nrow, ncol, byrow=FALSE, dimnames=NULL) {
+setMethod("matrix","mondate",
+          function(data, nrow, ncol=1, byrow=FALSE, dimnames=NULL) {
+    if(!byrow & (nrow*ncol==length(data))) {
+        dim(data)<-c(nrow,ncol)
+        dimnames(data)<-dimnames
+        return(data)
+        }
     if (!missing(nrow) && !missing(ncol))
-        mondate(callNextMethod(getDataPart(data), nrow=nrow, 
-                                                  ncol=ncol, 
-                                                  byrow=byrow, 
-                                                  dimnames=dimnames), 
+        mondate(callNextMethod(as.numeric(data, convert=TRUE), nrow=nrow,
+                                                  ncol=ncol,
+                                                  byrow=byrow,
+                                                  dimnames=dimnames),
                 timeunits=data@timeunits, displayFormat=data@displayFormat)
     else
-    if(missing(ncol)) 
-        mondate(callNextMethod(getDataPart(data), nrow=nrow, 
-                                                  byrow=byrow, 
-                                                  dimnames=dimnames), 
+    if (missing(nrow))
+        mondate(callNextMethod(as.numeric(data, convert=TRUE), ncol=ncol,
+                                                  byrow=byrow,
+                                                  dimnames=dimnames),
                 timeunits=data@timeunits, displayFormat=data@displayFormat)
     else
-        mondate(callNextMethod(getDataPart(data), ncol=ncol, 
-                                                  byrow=byrow, 
-                                                  dimnames=dimnames), 
+        mondate(callNextMethod(as.numeric(data, convert=TRUE), nrow=nrow,
+                                                  byrow=byrow,
+                                                  dimnames=dimnames),
                 timeunits=data@timeunits, displayFormat=data@displayFormat)
     })
 
@@ -425,34 +459,89 @@ as.data.frame.mondate <- function(x, row.names=NULL, optional=FALSE, ...) {
 
 format.mondate<- function(x, ...) as.character(x, ...)
 
-cbind.mondate<- function(..., deparse.level=1) {
-    L <- list(...)
-    i<-which(sapply(L,class)=="mondate")[1L]
-    displayFormat<-L[[i]]@displayFormat
-    timeunits<-L[[i]]@timeunits
-    L <- lapply(L, function(x) getDataPart(mondate(x,timeunits=timeunits)))
-    new("mondate", do.call("cbind",L), 
-                   displayFormat=displayFormat,
-                   timeunits=timeunits)
+cbindMondate <- function(..., deparse.level=1) {
+    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
+    if ((timeunits <- mondateTimeunits(..1))=="months")
+        new("mondate", .Internal(cbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
+    else {
+        deparse.level <- as.integer(deparse.level)
+        # cbind colnames
+        L<-match.call(expand.dots=FALSE)[[2L]]
+        isym <- sapply(L,is.symbol)
+        dp <- sapply(L,deparse)
+        if (is.null(nm <- names(L))) {
+            if (deparse.level==1L) {
+                nm<-character(length(L))
+                nm[isym] <- dp[isym]
+                }
+            else
+            if (deparse.level==2L) nm <- dp
+            }
+        else {
+            inonm <- nm==""
+            i<-isym&inonm
+            if (deparse.level==1L) nm[i] <- dp[i]
+            if (deparse.level==2L) nm[inonm]<-dp[inonm]
+            }
+        L <- c(structure(list(...), names=nm))
+        new("mondate", do.call("cbind",c(lapply(L, function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=deparse.level))
+                                ),
+                       displayFormat=displayFormat,
+                       timeunits=timeunits)
+        }
     }
 
-rbind.mondate<- function(..., deparse.level=1) {
-    L <- list(...)
-    i<-which(sapply(L,class)=="mondate")[1L]
-    displayFormat<-L[[i]]@displayFormat
-    timeunits<-L[[i]]@timeunits
-    L <- lapply(L, function(x) getDataPart(mondate(x,timeunits=timeunits)))
-    new("mondate", do.call("rbind",L), 
-                   displayFormat=displayFormat,
-                   timeunits=timeunits)
+rbindMondate <- function(..., deparse.level=1) {
+    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
+    if ((timeunits <- mondateTimeunits(..1))=="months")
+        new("mondate", .Internal(rbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
+    else {
+        deparse.level <- as.integer(deparse.level)
+        # rbind rownames
+        L<-match.call(expand.dots=FALSE)[[2L]]
+        isym <- sapply(L,is.symbol)
+        dp <- sapply(L,deparse)
+        if (is.null(nm <- names(L))) {
+            if (deparse.level==1L) {
+                nm<-character(length(L))
+                nm[isym] <- dp[isym]
+                }
+            else
+            if (deparse.level==2L) nm <- dp
+            }
+        else {
+            inonm <- nm==""
+            i<-isym&inonm
+            if (deparse.level==1L) nm[i] <- dp[i]
+            if (deparse.level==2L) nm[inonm]<-dp[inonm]
+            }
+        L <- c(structure(list(...), names=nm))
+        new("mondate", do.call("rbind",c(lapply(L, function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=deparse.level))
+                                ),
+                       displayFormat=displayFormat,
+                       timeunits=timeunits)
+        }
     }
 
 seq.mondate<-function(from=NULL, to, ...) {
     if (missing(from)) mondate(seq(to=as.numeric(to, convert=TRUE), ...),
             timeunits=to@timeunits,
             displayFormat=to@displayFormat)
-    else mondate(seq(as.numeric(from, convert=TRUE), ...),
-            timeunits=from@timeunits,
-            displayFormat=from@displayFormat)
+    else 
+    if (missing(to)) mondate(seq(from=as.numeric(from, convert=TRUE), ...),
+                timeunits=from@timeunits,
+                displayFormat=from@displayFormat)
+    else mondate(seq(from=as.numeric(from, convert=TRUE), to=as.numeric(to, convert=TRUE), ...),
+                timeunits=from@timeunits,
+                displayFormat=from@displayFormat)
     }
 
+head.mondate <- function(x, ...) {
+    if (is.matrix(x)) head.matrix(x, ...) 
+    else NextMethod()
+    }
+
+tail.mondate <- function(x, ...) {
+    if (is.matrix(x)) tail.matrix(x, ...) 
+    else NextMethod()
+    }

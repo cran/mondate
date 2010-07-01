@@ -2,7 +2,6 @@
 \docType{methods}
 \alias{as.character-methods}
 \alias{as.character,mondate-method}
-\alias{format.mondate}
 \alias{as.numeric,mondate-method}
 \alias{as.Date-methods}
 \alias{as.Date,ANY-method}
@@ -15,7 +14,7 @@
 \description{
 Methods to coerce a \code{mondate} to other R objects.
 Currently that includes numbers, characters, 
-or one of three classes of dates.
+and three classes of dates.
 }
 \section{Methods}{
 \describe{
@@ -33,12 +32,6 @@ or one of three classes of dates.
             }
         }
     }
-
-    \item{\code{format(x = "mondate", ...)}}{
-        Format \code{mondate} in the \code{character} 
-        representation of the date.
-        For the full argument list, see \code{format}.
-        }
 
     \item{\code{as.numeric(x = "mondate",}}{ \code{convert=FALSE,}
         \code{timeunits=c("months", "years", "days"), ...)}
@@ -78,12 +71,12 @@ or one of three classes of dates.
         }
 }}
 \examples{
-(b<-mondate(1))              # end of first month of millennium
+(b<-mondate(1))              # end of first month of current millennium
 as.numeric(b)                # 1
 as.numeric(b, convert=TRUE, timeunits="years") # converts to 1/12 "years"
 (b<-mondate(1, timeunits="days")) # end of first day of millennium
 as.numeric(b)                # 1/31
-as.numeric(b, convert=TRUE)  # 1 (attribute "days")
+as.numeric(b, convert=TRUE)  # 1 (with a "days" attribute)
 as.Date(b)                   # displays as "2000-01-31"
 as.POSIXct(b)                # displays as "2000-01-31 UTC"
 weekdays(as.POSIXct(b))      # January 1, 2000 was a "Monday" (in English)

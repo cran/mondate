@@ -13,10 +13,10 @@
 \alias{mondate.ymd}
 \title{Useful Methods for Class mondate}
 \description{
-The methods in this section facilitate \code{mondate} construction,
-and determination of the year, month, and day numbers of the date 
-as those numbers would be seen in the character representation of the date
-(e.g., "January" = 1 and the first day of a month = 1.) 
+The methods in this section facilitate \code{mondate} construction
+using the year, month, and day numbers of the date 
+(as those numbers would be seen in the character representation of the date,
+i.e.., "January" = 1 and the first day of a month = 1).
 }
 \usage{
 mondate.mdy(m, d, y, displayFormat=.default.displayFormat,

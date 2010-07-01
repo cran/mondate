@@ -23,10 +23,10 @@ Miscellaneous \code{mondate} methods.
         }
 
     \item{\code{unique(x = "mondate", ...)}}{
-        Returns a \code{mondate}s but with duplicate
+        Returns a \code{mondate} but with duplicate
         elements/rows removed.
         For an explanation of the arguments in \code{\dots}, 
-        see \code{\link{unique}}.
+        see \code{base::unique}.
         }
 }}
 \examples{

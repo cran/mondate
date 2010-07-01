@@ -16,7 +16,7 @@ Methods to display a \code{mondate} in an R session.
         \cr 
         \code{displayFormat} property. 
         Uses the \code{noquote} function. 
-        Arguments in \code{\dots} are passed to \code{print}.
+        Arguments in \code{\dots} are passed to \code{base::print}.
         }
 
     \item{\code{show(x = "mondate")}}{
