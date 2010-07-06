@@ -9,6 +9,7 @@ exportMethods(
     "as.POSIXct",
     "as.POSIXlt",
     "c",
+	cbind,
     "day",
 	mondateDisplayFormat,
     "matrix",
@@ -17,6 +18,7 @@ exportMethods(
     "month",
     "print",
     "rep",
+	rbind,
     "show",
 	mondateTimeunits,
     "unique",
@@ -24,7 +26,14 @@ exportMethods(
 )
 exportClasses(
     	mondate,
-	numarray
+	numarray,
+	"mondAtomic",
+	"mondArray_or_Atomic",
+	"mondate_possible",
+	"mondAtomic_w_date",
+	"mondArray_or_Atomic_w_date",
+	"mondate_possible_w_date"
+
 )
 S3method(as.data.frame, mondate)
 S3method(format, mondate)

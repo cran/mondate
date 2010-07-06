@@ -34,6 +34,8 @@
     )
 .default.timeunits <- "months"
 
+.date.classes <- c("Date","POSIXt","POSIXct","POSIXlt")
+
 ##  USEFUL INTERNAL FUNCTIONS
 
 .is.leapyear<-function(yr) yr%%400==0 | (yr%%4==0 & yr%%100!=0)
@@ -342,6 +344,86 @@ setMethod("matrix","mondate",
                 timeunits=data@timeunits, displayFormat=data@displayFormat)
     })
 
+# C/RBIND subsection
+
+setClassUnion("mondAtomic",
+	      members = c("logical", "integer", "numeric", "character"))
+setClassUnion("mondArray_or_Atomic",
+	      members = c("array", "matrix", "mondAtomic"))
+setClassUnion("mondate_possible",
+	      members = c("mondArray_or_Atomic", "mondate"))
+
+setClassUnion("mondAtomic_w_date",
+	      members = c("mondAtomic", .date.classes))
+setClassUnion("mondArray_or_Atomic_w_date",
+	      members = c("array", "matrix", "mondAtomic_w_date"))
+setClassUnion("mondate_possible_w_date",
+	      members = c("mondArray_or_Atomic_w_date", "mondate"))
+
+.crbindnames <- function(L, deparse.level) {
+    # L was created by L<-match.call(expand.dots=FALSE)[[2L]]
+    isym <- sapply(L,is.symbol)
+    dp <- sapply(L,deparse)
+    if (is.null(nm <- names(L))) {
+        if (deparse.level==1L) {
+            nm<-character(length(L))
+            nm[isym] <- dp[isym]
+            }
+        else
+        if (deparse.level==2L) nm <- dp
+        }
+    else {
+        inonm <- nm==""
+        i<-isym&inonm
+        if (deparse.level==1L) nm[i] <- dp[i]
+        if (deparse.level==2L) nm[inonm]<-dp[inonm]
+        }
+    nm
+    }
+setGeneric("cbind", function(..., deparse.level=1) standardGeneric("cbind"), signature = c("..."))# -> message about creating generic, signatures differ
+setMethod("cbind","mondate_possible", function (..., deparse.level = 0) {
+    displayFormat<-mondateDisplayFormat(..1)
+    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
+    # Default case is fastest.
+    if ((timeunits <- mondateTimeunits(..1))=="months")
+        new("mondate", .Internal(cbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
+    else new("mondate", do.call(base::cbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+             displayFormat=displayFormat, timeunits=timeunits)
+    }
+    )
+setMethod("cbind","mondate_possible_w_date", function (..., deparse.level = 0) {
+    displayFormat<-mondateDisplayFormat(..1)
+    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
+    # When there are dates, must convert column-by-column always
+    timeunits<-mondateTimeunits(..1)
+    new("mondate", do.call(base::cbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+        displayFormat=displayFormat, timeunits=timeunits)
+    }
+    )
+setMethod("cbind","ANY", function (..., deparse.level = 0) .Internal(cbind(deparse.level, ...)))
+
+setGeneric("rbind", function(..., deparse.level=1) standardGeneric("rbind"), signature = c("..."))# -> message about creating generic, signatures differ
+setMethod("rbind","mondate_possible", function (..., deparse.level = 0) {
+    displayFormat<-mondateDisplayFormat(..1)
+    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
+    # Default case is fastest.
+    if ((timeunits <- mondateTimeunits(..1))=="months")
+        new("mondate", .Internal(rbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
+    else new("mondate", do.call(base::rbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+             displayFormat=displayFormat, timeunits=timeunits)
+    }
+    )
+setMethod("rbind","mondate_possible_w_date", function (..., deparse.level = 0) {
+    displayFormat<-mondateDisplayFormat(..1)
+    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
+    # When there are dates, must convert column-by-column always
+    timeunits<-mondateTimeunits(..1)
+    new("mondate", do.call(base::rbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+        displayFormat=displayFormat, timeunits=timeunits)
+    }
+    )
+setMethod("rbind","ANY", function (..., deparse.level = 0) .Internal(rbind(deparse.level, ...)))
+
 ## PRINT, SHOW
 
 setGeneric("print")
@@ -459,68 +541,21 @@ as.data.frame.mondate <- function(x, row.names=NULL, optional=FALSE, ...) {
 
 format.mondate<- function(x, ...) as.character(x, ...)
 
-cbindMondate <- function(..., deparse.level=1) {
+# Now an S4 method
+.cbindMondate <- function(..., deparse.level=1) {
     if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
-    if ((timeunits <- mondateTimeunits(..1))=="months")
-        new("mondate", .Internal(cbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
-    else {
-        deparse.level <- as.integer(deparse.level)
-        # cbind colnames
-        L<-match.call(expand.dots=FALSE)[[2L]]
-        isym <- sapply(L,is.symbol)
-        dp <- sapply(L,deparse)
-        if (is.null(nm <- names(L))) {
-            if (deparse.level==1L) {
-                nm<-character(length(L))
-                nm[isym] <- dp[isym]
-                }
-            else
-            if (deparse.level==2L) nm <- dp
-            }
-        else {
-            inonm <- nm==""
-            i<-isym&inonm
-            if (deparse.level==1L) nm[i] <- dp[i]
-            if (deparse.level==2L) nm[inonm]<-dp[inonm]
-            }
-        L <- c(structure(list(...), names=nm))
-        new("mondate", do.call("cbind",c(lapply(L, function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=deparse.level))
-                                ),
-                       displayFormat=displayFormat,
-                       timeunits=timeunits)
-        }
+    if ((timeunits <- mondateTimeunits(..1))!="months"||any(sapply(match.call(expand.dots=FALSE)[[2L]], function(x) class(eval.parent(x))[1L]) %in% .date.classes))
+        new("mondate", do.call(base::cbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+             displayFormat=displayFormat, timeunits=timeunits)
+    else new("mondate", .Internal(cbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
     }
 
-rbindMondate <- function(..., deparse.level=1) {
+.rbindMondate <- function(..., deparse.level=1) {
     if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
-    if ((timeunits <- mondateTimeunits(..1))=="months")
-        new("mondate", .Internal(rbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
-    else {
-        deparse.level <- as.integer(deparse.level)
-        # rbind rownames
-        L<-match.call(expand.dots=FALSE)[[2L]]
-        isym <- sapply(L,is.symbol)
-        dp <- sapply(L,deparse)
-        if (is.null(nm <- names(L))) {
-            if (deparse.level==1L) {
-                nm<-character(length(L))
-                nm[isym] <- dp[isym]
-                }
-            else
-            if (deparse.level==2L) nm <- dp
-            }
-        else {
-            inonm <- nm==""
-            i<-isym&inonm
-            if (deparse.level==1L) nm[i] <- dp[i]
-            if (deparse.level==2L) nm[inonm]<-dp[inonm]
-            }
-        L <- c(structure(list(...), names=nm))
-        new("mondate", do.call("rbind",c(lapply(L, function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=deparse.level))
-                                ),
-                       displayFormat=displayFormat,
-                       timeunits=timeunits)
-        }
+    if ((timeunits <- mondateTimeunits(..1))!="months"||any(sapply(match.call(expand.dots=FALSE)[[2L]], function(x) class(eval.parent(x))[1L]) %in% .date.classes))
+        new("mondate", do.call(base::rbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+             displayFormat=displayFormat, timeunits=timeunits)
+    else new("mondate", .Internal(rbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
     }
 
 seq.mondate<-function(from=NULL, to, ...) {
