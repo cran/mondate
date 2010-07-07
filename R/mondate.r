@@ -135,7 +135,7 @@ setMethod("mondate", "character", function(x, displayFormat, timeunits, ...) {
             }
         if (is.na(d)) {
             warning("mondate character", 
-                    "first non-NA element '", x[m],
+                    " first non-NA element '", x[m],
                     "' not a date. Converting to numeric")
             mondate(as.numeric(x), 
                     displayFormat=displayFormat, timeunits=timeunits, ...)
@@ -151,13 +151,17 @@ setMethod("mondate", "character", function(x, displayFormat, timeunits, ...) {
                           timeunits=timeunits, ...)
     })
 setMethod("mondate", "array", function(x, displayFormat, timeunits, ...) {
-    dims <- dim(x)
-    dimnams <- dimnames(x)
-    dim(x) <- NULL
-    y<-callNextMethod()
-    dim(y) <- dims
-    dimnames(y) <- dimnams
-    y
+    if (mode(x)!="numeric") {
+        dims <- dim(x)
+        dimnams <- dimnames(x)
+        dim(x) <- NULL
+        if (missing(displayFormat)) y <- mondate(x, timeunits=timeunits)
+        else y <- mondate(x, displayFormat=displayFormat, timeunits=timeunits)
+        dim(y@.Data) <- dims
+        if (!is.null(dimnams)) dimnames(y@.Data) <- dimnams
+        y
+        }
+    else new("mondate", x, displayFormat=displayFormat, timeunits=timeunits)
     })
 setMethod("mondate", "ANY", function(x, displayFormat, timeunits, ...) { 
     y <- tryCatch(as.Date(x, ...), 
@@ -203,15 +207,39 @@ setMethod("as.POSIXct","mondate", function(x,  tz="", ...)
     as.POSIXct(as.POSIXlt(as.Date(x), ...)))
 
 setMethod("as.numeric", "mondate", function(x, 
-               convert=FALSE, timeunits=c("months","years","days"), ...) {
+               convert=FALSE, stripdim=FALSE,  
+               timeunits=c("months","years","days"), ...) {
+    # If convert == FALSE, just strip out data part
+    # If convert==TRUE, change units if necessary.
+    # If stripdim, strip dim and names (like base::as.numereic)
+    # Otherwise, keep shape.
+    
     if (missing(timeunits)) timeunits <- slot(x,"timeunits")
-    if (!convert) y <- getDataPart(x) 
-    else {
-        if (timeunits=="months") y<-c(getDataPart(x))
+    if (!convert) {
+        if (stripdim) y <- c(getDataPart(x))
+        else y <- getDataPart(x) 
+        }
+    else # convert
+    # but may not have to
+    if (timeunits==mondateTimeunits(x)) {
+        if (stripdim) y <- c(getDataPart(x))
+        else y <- getDataPart(x) 
+        }
+    else # must convert
+    if (stripdim) {
+        if (timeunits=="months") y<-structure(c(getDataPart(x)), timeunits=timeunits)
         else
-        if (timeunits=="years") y<-c(getDataPart(x)/12)
-        else y<-c(as.numeric(as.Date(x)))-.mondate.days.zero
-        attr(y,"timeunits") <- timeunits
+        if (timeunits=="years") y<-structure(c(getDataPart(x)/12), timeunits=timeunits)
+        else y<-structure(as.numeric(as.Date(x))-.mondate.days.zero, timeunits=timeunits)
+        }
+    else # keep shape
+    if (timeunits=="months") y<-structure(getDataPart(x), timeunits=timeunits)
+    else
+    if (timeunits=="years") y<-structure(getDataPart(x)/12, timeunits=timeunits)
+    else {
+        dims <- dim(x)
+        dimnms <- dimnames(x)
+        y<-structure(as.numeric(as.Date(x))-.mondate.days.zero, timeunits=timeunits, dim=dims, dimnames=dimnms)
         }
     y
     })
@@ -232,9 +260,9 @@ setMethod("as.character","mondate", function(x, displayFormat, ...) {
 
 ## DATE ARITHMETIC
 
-setMethod("Compare", "mondate", function(e1,e2) 
+setMethod("Compare", "mondate", function(e1,e2) { 
     callGeneric(getDataPart(e1),getDataPart(e2))
-    )
+    })
 
 setMethod("Arith",c("mondate","mondate"),function(e1,e2) {
     if (missing(e2)) 
@@ -244,24 +272,28 @@ setMethod("Arith",c("mondate","mondate"),function(e1,e2) {
         timeunits <- e1@timeunits
         if (timeunits!=e2@timeunits) 
             warning("Unequal timeunits, using first mondate's= ", timeunits)
-        if (timeunits=="months") 
-            x<-callGeneric(unclass(e1),unclass(e2))
+        if (timeunits=="months"){ 
+            x<-structure(callGeneric(unclass(e1),unclass(e2)), displayFormat=NULL, timeunits=NULL, .S3Class=NULL, timeunits=timeunits)
+            }
         else
-        if (timeunits=="years") x<-callGeneric(unclass(e1),unclass(e2))/12
-        else x<-callGeneric(as.Date(e1),as.Date(e2))
-        attributes(x)<-NULL
-        attr(x,"timeunits") <- timeunits
+        if (timeunits=="years")
+            x<-structure(callGeneric(unclass(e1),unclass(e2))/12, displayFormat=NULL, timeunits=NULL, .S3Class=NULL, timeunits=timeunits)
+        else {
+            dims <- dim(x)
+            dimnms <- dimnames(x)
+            x<-structure(unclass(callGeneric(as.Date(e1),as.Date(e2))), units=NULL, displayFormat=NULL, timeunits=NULL, .S3Class=NULL, timeunits=timeunits, dim=dims, dimnames=dimnms)
+            }
         }
     x
     })
-setMethod("Arith",c("numeric","mondate"),function(e1,e2)
+setMethod("Arith",c("numeric","mondate"),function(e1,e2) {
     mondate(callGeneric(e1, as.numeric(e2,convert=TRUE)), 
             timeunits=e2@timeunits, displayFormat=e2@displayFormat)
-    )
-setMethod("Arith",c("mondate","numeric"),function(e1,e2)
+    })
+setMethod("Arith",c("mondate","numeric"),function(e1,e2) {
     mondate(callGeneric(as.numeric(e1,convert=TRUE),e2), 
             timeunits=e1@timeunits, displayFormat=e1@displayFormat)
-    )
+    })
 
 setMethod("Summary","mondate", function(x, ..., na.rm = FALSE) 
     mondate(callGeneric(x@.Data, ..., na.rm=na.rm), 
@@ -486,6 +518,23 @@ setMethod("day", "mondate", function(x, ...) {
         names(y) <- nams
         }
     y
+    })
+    
+setGeneric("MonthsBetween", function(from,to) standardGeneric("MonthsBetween"))
+setMethod("MonthsBetween", c("mondate","mondate"), function(from,to) structure(unclass(to)-unclass(from),displayFormat=NULL, timeunits=NULL, .S3Class=NULL))
+setGeneric("YearsBetween", function(from,to) standardGeneric("YearsBetween"))
+setMethod("YearsBetween", c("mondate","mondate"), function(from,to) structure((unclass(to)-unclass(from))/12,displayFormat=NULL, timeunits=NULL, .S3Class=NULL))
+setGeneric("DaysBetween", function(from,to) standardGeneric("DaysBetween"))
+setMethod("DaysBetween", c("mondate","mondate"), function(from,to) {
+    if (length(from)>=length(to)) {
+        dims <- dim(from)
+        dimnams <- dimnames(from)
+        }
+    else {
+        dims <- dim(to)
+        dimnams <- dimnames(to)
+        }
+    structure(unclass(as.Date(to)-as.Date(from)), dim=dims, dimnames=dimnams, units=NULL)
     })
 
 ## Constructing with month, year, and day numbers

@@ -33,7 +33,8 @@ and three classes of dates.
         }
     }
 
-    \item{\code{as.numeric(x = "mondate",}}{ \code{convert=FALSE,}
+    \item{\code{as.numeric(x = "mondate",}}{ 
+        \code{convert=FALSE, stripdim=FALSE, }
         \code{timeunits=c("months", "years", "days"), ...)}
         Coerce \code{mondate} to class \code{numeric}.
         \describe{
@@ -50,6 +51,12 @@ and three classes of dates.
             Also in the case that \code{convert=TRUE}
             the \code{numeric} returned will have
             "timeunits" as an attribute.
+            }
+            \item{\code{stripdim:}}{ 
+            \code{FALSE} (the default)
+            retains the array attributes \code{dim} and \code{dimnames}.
+            If \code{TRUE} the dimension attributes are stripped,
+            which is the default behavior of \code{base::as.numeric}.
             }
         \item{\code{timeunits}}{
             If \code{missing} the value is drawn from 
