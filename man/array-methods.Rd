@@ -31,8 +31,8 @@ See \code{\link{matrix}} for further details.
 (M<-mondate.mdy(12,31,2006:2010, timeunits="years")) # 5 year-ends
 # rows representing (actuarial) accident years
 matrix(c(M,M+1), nrow=5, 
-        dimnames=list(AccYrs=LETTERS[1:5],
-        YearBounds=c("Begin","End")))
+        dimnames=list(Accounting_Year=LETTERS[1:5],
+        c("Begin","End")))
 # the first 27 days of 2000 in a three-dimensional array
 array(mondate(1:27, timeunits="days"), rep(3,3))
 }

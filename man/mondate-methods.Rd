@@ -8,7 +8,9 @@
 \alias{mondate,Date-method}
 \alias{mondate,mondate-method}
 \alias{mondate,numeric-method}
+\alias{mondate,matrix-method}
 \alias{mondate,POSIXt-method}
+\alias{mondate,missing-method}
 \title{Create an instance of the mondate class}
 \description{
 All purpose constructor for an instance of the \code{mondate} class.
@@ -61,6 +63,13 @@ of the millennium,
 in which case the value is calculated using \code{as.Date}.
 }
 
+\item{\code{signature(x = "matrix")}}{
+Dimensions and names are removed, 
+\code{mondate} is called on the vector version of x
+(numeric, character, etc.),
+then the dimensions and names are restored.
+}
+
 \item{\code{signature(x = "Date")}}{
 }
 \item{\code{signature(x = "POSIXt")}}{
@@ -91,15 +100,24 @@ to a \code{mondate}.
 
 \item{\code{signature(x = "mondate")}}{
 For \code{mondate} x, this could be a way to copy a \code{mondate}
-and perehaps change 
+and perhaps change 
 the \code{mondate}'s \code{displayFormat} or \code{timeunits} slots
 in the process.
+For any class that extends \code{mondate},
+use of this method will return the underlying mondate class without
+additional slots (if any) of the subclass.
 }
 
 \item{\code{signature(x = "array")}}{
 If an object \code{x} is an \code{array}, 
 then this method enables the \code{mondate} to inherit its shape. 
 After that, other "signatures" take over.
+}
+
+\item{\code{signature(x = "missing")}}{
+Enables the call \code{mondate()} to work.
+Useful for prototypes, e.g.
+Body of method is simply \code{new("mondate")}.
 }
 
 \item{\code{signature(x = "ANY")}}{
@@ -126,24 +144,26 @@ mondate(cbind(x,y))  # bounding dates of first 6 years of millennium
 mondate(x)           # first 6 yearends
 (y<-mondate(1:6,timeunits="years")) # the same, but will show the results
                      # of date arithmetic in "years" rather than "months"
+tail(y,-1)-head(y,-1)# vector of five 1's, with "timeunits" attribute = 1
 as.numeric(x)
 as.numeric(y)        # the underlying numeric representations are the same
 
-x<-ts(1:10, frequency = 4, start = c(1959, 2)) # start=second quarter 1959
-mondate(x)           # thinks start=January 31, 2000; see warning
-library(zoo)
-mondate(x)           # zoo has an as.Date method for a time series, 
-                     # so start now shows as April 1, 1959.
-# This points out a difference between zoo and mondate:
-#   zoo assumes that the zeroth part of a month or quarter is the first
+# The remaining examples point out a difference between zoo and mondate.
+#   zoo assumes that the zero-th part of a month or quarter is the first
 #   day of the month or quarter, whereas mondate assumes that it is 
 #   the instant before the first day of the month or quarter.
 # Since frac=0 is zoo's as.Date coersion default, a month or quarter in 
 #   zoo's sense converts to the end of the first day rather than
 #   the beginning.
-mondate(as.yearmon("2010-6-15")) # end of the first day of the month
-mondate(as.yearmon("2010-6-15"), frac=1) # end of the last day
+library(zoo)
+x<-ts(1:10, frequency = 4, start = c(1959, 2)) # starting 2nd quarter of 1959
+x
+mondate(x)           # mondate uses zoo's "as.Date" method for a time series
+
+mondate(as.yearmon("2010-6-15"))         # end of first day of June 2010
+mondate(as.yearmon("2010-6-15"), frac=1) # end of  last day of June 2010
 mondate(as.yearqtr("2010-2"), frac=1)    # same
+
 }
 
 \keyword{methods}

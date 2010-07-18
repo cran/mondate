@@ -54,7 +54,8 @@ year(M)     # 2008
 month(M)    # 6
 day(M)      # 30
 mondate.ymd(2008,6,30)  # the same
-mondate.ymd(2008,6)     # the same; missing day indicates last day of the month
-mondate.ymd(2008,1:12)  # all month-ends of 2008; note leapyear
+mondate.ymd(2008,6)     # the same; when 'day' argument is missing 
+                        # defaults to last day of the month
+mondate.ymd(2008,1:12)  # all month-ends of 2008, a leapyear
 }
 \keyword{methods}

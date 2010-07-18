@@ -85,7 +85,7 @@ M<-mondate("1-1-2010") # will display in U.S. date format
 M-1:12 # the 1st of the month for all months in 2009
        # in reverse chronological order; inherits M's displayFormat
 
-x <- mondate(matrix(12*1:4,2,2)) # 2x2 matrix of 2001-2004 year ends
+x <- mondate(matrix(12*1:4,2,2)) # 2x2 matrix of 2000-2003 year ends
 x                                
 y<-x+12                          # one year later, also a matrix
 y

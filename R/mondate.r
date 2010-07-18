@@ -29,8 +29,9 @@
                    EU="%Y-%m-%d", # EU format
                    EUb="%Y/%m/%d")
 .default.displayFormat <- ifelse (
-    length(grep("United States",Sys.getlocale("LC_TIME")))!=1L,
-        .displayFormat[3L], .displayFormat[1L]
+    (length(grep("United States",Sys.getlocale("LC_TIME"))) +      # windows
+     length(grep("en_US",        Sys.getlocale("LC_TIME")))) > 0L, # mac os X
+        .displayFormat[1L], .displayFormat[3L]
     )
 .default.timeunits <- "months"
 
@@ -50,12 +51,12 @@
 
 ##  THE CLASS
 
-setClassUnion("numarray",c("numeric","array"))
+#setClassUnion("numarray",c("numeric","array"))
 setClass("mondate",
     representation(
         displayFormat="character",
         timeunits="character"),
-    contains="numarray",
+    contains="numeric",
     prototype=prototype(
         numeric(0),
         displayFormat=.default.displayFormat,
@@ -74,12 +75,28 @@ setReplaceMethod("mondateDisplayFormat", "mondate", function(x, value) {
     x@displayFormat <- value
     x 
     })
+setGeneric("displayFormat", function(x) standardGeneric("displayFormat"))
+setMethod("displayFormat","mondate", function(x) x@displayFormat)
+setMethod("displayFormat","ANY", function(x) NULL)
+setGeneric("displayFormat<-",function(x,value) standardGeneric("displayFormat<-"))
+setReplaceMethod("displayFormat", "mondate", function(x, value) { 
+    x@displayFormat <- value
+    x 
+    })
 
 setGeneric("mondateTimeunits", function(x) standardGeneric("mondateTimeunits"))
 setMethod("mondateTimeunits","mondate", function(x) x@timeunits)
 setMethod("mondateTimeunits","ANY", function(x) NULL)
 setGeneric("mondateTimeunits<-",function(x,value) standardGeneric("mondateTimeunits<-"))
 setReplaceMethod("mondateTimeunits", "mondate", function(x, value) { 
+    x@timeunits <- value
+    x 
+    })
+setGeneric("timeunits", function(x) standardGeneric("timeunits"))
+setMethod("timeunits","mondate", function(x) x@timeunits)
+setMethod("timeunits","ANY", function(x) NULL)
+setGeneric("timeunits<-",function(x,value) standardGeneric("timeunits<-"))
+setReplaceMethod("timeunits", "mondate", function(x, value) { 
     x@timeunits <- value
     x 
     })
@@ -90,10 +107,23 @@ setGeneric("mondate", function(x, displayFormat=.default.displayFormat,
                                timeunits=.default.timeunits, ...) 
                       standardGeneric("mondate"))
 setMethod("mondate", "mondate", function(x, displayFormat, timeunits, ...) {
-    new("mondate", x, displayFormat=displayFormat, timeunits=timeunits, ...)
+    new("mondate", 
+        x@.Data, 
+        displayFormat = if (missing(displayFormat)) x@displayFormat 
+                        else displayFormat, 
+        timeunits = if(missing(timeunits)) x@timeunits
+                        else timeunits, 
+        ...
+        )
     })
+#setMethod("mondate", "matrix", function(x, displayFormat, timeunits=c("months","years","days"), ...) {
+#    structure(mondate(c(x), displayFormat=displayFormat, timeunits=match.arg(timeunits), ...), 
+#              dim=dim(x), dimnames=dimnames(x))
+#    })
 setMethod("mondate", "numeric", function(x, 
             displayFormat, timeunits=c("months","years","days"), ...) {
+#    dims <- dim(x)
+#    dimnms <- dimnames(x)
     timeunits<-match.arg(timeunits)
     if (timeunits=="months") new("mondate", x, 
                                  displayFormat=displayFormat, 
@@ -109,6 +139,8 @@ setMethod("mondate", "numeric", function(x,
                        .daysinmonth(x$year+.ISO.year.zero,x$mon+1), 
             displayFormat=displayFormat, timeunits=timeunits, ...)
         }
+#    if (!is.null(dims)) {dim(y) <- dims; dimnames(y) <- dimnms}
+#    y
     })
 .date.to.mondate <- function(x, displayFormat, timeunits, ...) {
     x <- as.POSIXlt(x, ...)
@@ -150,20 +182,24 @@ setMethod("mondate", "character", function(x, displayFormat, timeunits, ...) {
                           displayFormat=displayFormat, 
                           timeunits=timeunits, ...)
     })
-setMethod("mondate", "array", function(x, displayFormat, timeunits, ...) {
-    if (mode(x)!="numeric") {
-        dims <- dim(x)
-        dimnams <- dimnames(x)
-        dim(x) <- NULL
-        if (missing(displayFormat)) y <- mondate(x, timeunits=timeunits)
-        else y <- mondate(x, displayFormat=displayFormat, timeunits=timeunits)
-        dim(y@.Data) <- dims
-        if (!is.null(dimnams)) dimnames(y@.Data) <- dimnams
-        y
-        }
-    else new("mondate", x, displayFormat=displayFormat, timeunits=timeunits)
+setMethod("mondate", "array", function(x, displayFormat, timeunits=c("months","years","days"), ...) {
+    structure(mondate(c(x), displayFormat=displayFormat, timeunits=match.arg(timeunits), ...), 
+              dim=dim(x), dimnames=dimnames(x))
+#    if (mode(x)!="numeric") {
+#        dims <- dim(x)
+#        dimnams <- dimnames(x)
+#        dim(x) <- NULL
+#        if (missing(displayFormat)) y <- mondate(x, timeunits=timeunits)
+#        else y <- mondate(x, displayFormat=displayFormat, timeunits=timeunits)
+#        dim(y@.Data) <- dims
+#        if (!is.null(dimnams)) dimnames(y@.Data) <- dimnams
+#        y
+#        }
+#    else new("mondate", x, displayFormat=displayFormat, timeunits=timeunits)
     })
+setMethod("mondate", "missing", function(x, displayFormat, timeunits, ...) new("mondate"))
 setMethod("mondate", "ANY", function(x, displayFormat, timeunits, ...) { 
+#    if (missing(...)) return(new("mondate"))
     y <- tryCatch(as.Date(x, ...), 
         error = function(e) tryCatch(as.numeric(x),
             error=function(e) stop("Cannot convert class '", 
@@ -211,35 +247,33 @@ setMethod("as.numeric", "mondate", function(x,
                timeunits=c("months","years","days"), ...) {
     # If convert == FALSE, just strip out data part
     # If convert==TRUE, change units if necessary.
-    # If stripdim, strip dim and names (like base::as.numereic)
+    # If stripdim, strip dim and names (like base::as.numeric)
     # Otherwise, keep shape.
-    
     if (missing(timeunits)) timeunits <- slot(x,"timeunits")
     if (!convert) {
-        if (stripdim) y <- c(getDataPart(x))
-        else y <- getDataPart(x) 
+        if (stripdim) y <- x@.Data
+        else y <- structure(x@.Data, dim=dim(x), dimnames=dimnames(x)) 
         }
     else # convert
     # but may not have to
-    if (timeunits==mondateTimeunits(x)) {
-        if (stripdim) y <- c(getDataPart(x))
-        else y <- getDataPart(x) 
+    if (timeunits=="months") {
+        if (stripdim) y <- x@.Data
+        else y <- structure(x@.Data, dim=dim(x), dimnames=dimnames(x)) 
         }
     else # must convert
     if (stripdim) {
-        if (timeunits=="months") y<-structure(c(getDataPart(x)), timeunits=timeunits)
-        else
-        if (timeunits=="years") y<-structure(c(getDataPart(x)/12), timeunits=timeunits)
+#        if (timeunits=="months") y<-structure(c(getDataPart(x)), timeunits=timeunits)
+#        else
+        if (timeunits=="years") y<-structure(x@.Data/12, timeunits=timeunits)
         else y<-structure(as.numeric(as.Date(x))-.mondate.days.zero, timeunits=timeunits)
         }
-    else # keep shape
-    if (timeunits=="months") y<-structure(getDataPart(x), timeunits=timeunits)
-    else
-    if (timeunits=="years") y<-structure(getDataPart(x)/12, timeunits=timeunits)
-    else {
+    else {# keep shape
         dims <- dim(x)
         dimnms <- dimnames(x)
-        y<-structure(as.numeric(as.Date(x))-.mondate.days.zero, timeunits=timeunits, dim=dims, dimnames=dimnms)
+#    if (timeunits=="months") y<-structure(getDataPart(x), timeunits=timeunits)
+#    else
+        if (timeunits=="years") y<-structure(x@.Data/12, timeunits=timeunits, dim=dims, dimnames=dimnms)
+        else y<-structure(as.numeric(as.Date(x))-.mondate.days.zero, timeunits=timeunits, dim=dims, dimnames=dimnms)
         }
     y
     })
@@ -331,10 +365,17 @@ setMethod("c", "mondate", function(x, ..., recursive=FALSE) {
 
     })
 
-setMethod("[", "mondate", function(x, i, j, ..., drop) 
-    new("mondate", callNextMethod(), 
-                   displayFormat=x@displayFormat, timeunits=x@timeunits)
-    )
+setMethod("[", "mondate", function(x, i, j, ..., drop) { 
+    y <- callNextMethod()
+    structure(
+        new("mondate", y,
+            displayFormat=x@displayFormat, 
+            timeunits=x@timeunits
+            ),
+        dim=dim(y),
+        dimnames=dimnames(y)
+        )
+    })
 
 setMethod("rep", "mondate", function(x, ...)
     mondate(callNextMethod(x@.Data, ...), 
@@ -378,83 +419,117 @@ setMethod("matrix","mondate",
 
 # C/RBIND subsection
 
-setClassUnion("mondAtomic",
-	      members = c("logical", "integer", "numeric", "character"))
-setClassUnion("mondArray_or_Atomic",
-	      members = c("array", "matrix", "mondAtomic"))
-setClassUnion("mondate_possible",
-	      members = c("mondArray_or_Atomic", "mondate"))
+#setClassUnion("mondAtomic",
+#	      members = c("logical", "integer", "numeric", "character"))
+#setClassUnion("mondArray_or_Atomic",
+#	      members = c("array", "matrix", "mondAtomic"))
+#setClassUnion("mondate_possible",
+#	      members = c("mondArray_or_Atomic", "mondate"))
+#
+#setClassUnion("mondAtomic_w_date",
+#	      members = c("mondAtomic", .date.classes))
+#setClassUnion("mondArray_or_Atomic_w_date",
+#	      members = c("array", "matrix", "mondAtomic_w_date"))
+#setClassUnion("mondate_possible_w_date",
+#	      members = c("mondArray_or_Atomic_w_date", "mondate"))
 
-setClassUnion("mondAtomic_w_date",
-	      members = c("mondAtomic", .date.classes))
-setClassUnion("mondArray_or_Atomic_w_date",
-	      members = c("array", "matrix", "mondAtomic_w_date"))
-setClassUnion("mondate_possible_w_date",
-	      members = c("mondArray_or_Atomic_w_date", "mondate"))
-
-.crbindnames <- function(L, deparse.level) {
-    # L was created by L<-match.call(expand.dots=FALSE)[[2L]]
-    isym <- sapply(L,is.symbol)
-    dp <- sapply(L,deparse)
-    if (is.null(nm <- names(L))) {
-        if (deparse.level==1L) {
-            nm<-character(length(L))
-            nm[isym] <- dp[isym]
-            }
-        else
-        if (deparse.level==2L) nm <- dp
-        }
-    else {
-        inonm <- nm==""
-        i<-isym&inonm
-        if (deparse.level==1L) nm[i] <- dp[i]
-        if (deparse.level==2L) nm[inonm]<-dp[inonm]
-        }
-    nm
-    }
+#.crbindnames <- function(L, deparse.level) {
+#    # L was created by L<-match.call(expand.dots=FALSE)[[2L]]
+#    isym <- sapply(L,is.symbol)
+#    dp <- sapply(L,deparse)
+#    if (is.null(nm <- names(L))) {
+#        if (deparse.level==1L) {
+#            nm<-character(length(L))
+#            nm[isym] <- dp[isym]
+#            }
+#        else
+#        if (deparse.level==2L) nm <- dp
+#        }
+#    else {
+#        inonm <- nm==""
+#        i<-isym&inonm
+#        if (deparse.level==1L) nm[i] <- dp[i]
+#        if (deparse.level==2L) nm[inonm]<-dp[inonm]
+#        }
+#    nm
+#    }
 setGeneric("cbind", function(..., deparse.level=1) standardGeneric("cbind"), signature = c("..."))# -> message about creating generic, signatures differ
-setMethod("cbind","mondate_possible", function (..., deparse.level = 0) {
-    displayFormat<-mondateDisplayFormat(..1)
-    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
-    # Default case is fastest.
-    if ((timeunits <- mondateTimeunits(..1))=="months")
-        new("mondate", .Internal(cbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
-    else new("mondate", do.call(base::cbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
-             displayFormat=displayFormat, timeunits=timeunits)
-    }
-    )
-setMethod("cbind","mondate_possible_w_date", function (..., deparse.level = 0) {
-    displayFormat<-mondateDisplayFormat(..1)
-    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
-    # When there are dates, must convert column-by-column always
-    timeunits<-mondateTimeunits(..1)
-    new("mondate", do.call(base::cbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
-        displayFormat=displayFormat, timeunits=timeunits)
-    }
-    )
-setMethod("cbind","ANY", function (..., deparse.level = 0) .Internal(cbind(deparse.level, ...)))
+#setGeneric("cbind")  # just this alone doesn't work...cannot "find" cbind(mondate) method below
+setMethod("cbind","mondate", function (..., deparse.level = 0) {
+    y <- .Internal(cbind(deparse.level=deparse.level, ...))
+    structure(
+        new("mondate", 
+            c(y), 
+            displayFormat=displayFormat(..1),
+            timeunits=timeunits(..1)
+            ),
+        dim=dim(y), 
+        dimnames=dimnames(y)
+        )
+    })
+    
+#    displayFormat<-mondateDisplayFormat(..1)
+#    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
+#    # Default case is fastest.
+#    if ((timeunits <- mondateTimeunits(..1))=="months")
+#        new("mondate", .Internal(cbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
+#        mondate(.Internal(cbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
+#    else {
+#        rownms <- if(is.null(rn<-rownames(..1))) names(..1) else rn
+#        structure(
+#    mondate(do.call(base::cbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+#             displayFormat=displayFormat, timeunits=timeunits),
+#             dimnames=list(rn))
+#        }
+#    }
+#    )
+#setMethod("cbind","mondate_possible_w_date", function (..., deparse.level = 0) {
+#    displayFormat<-mondateDisplayFormat(..1)
+#    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(cbind(deparse.level, ...)))
+#    # When there are dates, must convert column-by-column always
+#    timeunits<-mondateTimeunits(..1)
+#    new("mondate", do.call(base::cbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+#        displayFormat=displayFormat, timeunits=timeunits)
+#    }
+#    )
+#setMethod("cbind","ANY", function (..., deparse.level = 0) .Internal(cbind(deparse.level, ...)))
 
 setGeneric("rbind", function(..., deparse.level=1) standardGeneric("rbind"), signature = c("..."))# -> message about creating generic, signatures differ
-setMethod("rbind","mondate_possible", function (..., deparse.level = 0) {
-    displayFormat<-mondateDisplayFormat(..1)
-    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
-    # Default case is fastest.
-    if ((timeunits <- mondateTimeunits(..1))=="months")
-        new("mondate", .Internal(rbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
-    else new("mondate", do.call(base::rbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
-             displayFormat=displayFormat, timeunits=timeunits)
-    }
-    )
-setMethod("rbind","mondate_possible_w_date", function (..., deparse.level = 0) {
-    displayFormat<-mondateDisplayFormat(..1)
-    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
-    # When there are dates, must convert column-by-column always
-    timeunits<-mondateTimeunits(..1)
-    new("mondate", do.call(base::rbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
-        displayFormat=displayFormat, timeunits=timeunits)
-    }
-    )
-setMethod("rbind","ANY", function (..., deparse.level = 0) .Internal(rbind(deparse.level, ...)))
+#setGeneric("rbind")
+setMethod("rbind","mondate", function (..., deparse.level = 0) {
+    y <- .Internal(rbind(deparse.level=deparse.level, ...))
+    structure(
+        new("mondate", 
+            c(y), 
+            displayFormat=displayFormat(..1),
+            timeunits=timeunits(..1)
+            ),
+        dim=dim(y), 
+        dimnames=dimnames(y)
+        )
+    })
+    
+#
+#setMethod("rbind","mondate_possible", function (..., deparse.level = 0) {
+#    displayFormat<-mondateDisplayFormat(..1)
+#    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
+#    # Default case is fastest.
+#    if ((timeunits <- mondateTimeunits(..1))=="months")
+#        new("mondate", .Internal(rbind(deparse.level, ...)), displayFormat=displayFormat, timeunits=timeunits)
+#    else new("mondate", do.call(base::rbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+#             displayFormat=displayFormat, timeunits=timeunits)
+#    }
+#    )
+#setMethod("rbind","mondate_possible_w_date", function (..., deparse.level = 0) {
+#    displayFormat<-mondateDisplayFormat(..1)
+#    if (is.null(displayFormat<-mondateDisplayFormat(..1))) return(.Internal(rbind(deparse.level, ...)))
+#    # When there are dates, must convert column-by-column always
+#    timeunits<-mondateTimeunits(..1)
+#    new("mondate", do.call(base::rbind,c(lapply(structure(list(...), names=.crbindnames(match.call(expand.dots=FALSE)[[2L]], deparse.level=deparse.level)), function(x) getDataPart(mondate(x,timeunits=timeunits))), list(deparse.level=as.integer(deparse.level)))),
+#        displayFormat=displayFormat, timeunits=timeunits)
+#    }
+#    )
+#setMethod("rbind","ANY", function (..., deparse.level = 0) .Internal(rbind(deparse.level, ...)))
 
 ## PRINT, SHOW
 
@@ -463,9 +538,15 @@ setMethod("print", "mondate", function(x, ...) {
     print(noquote(as.character(x)), ...)
     invisible(x)
     })
+#setMethod("show", "mondate", function(object) {
+#    cat('mondate: timeunits="', object@timeunits, '"\n', sep="")
+#    print(noquote(as.character(object)))
+#    })
 setMethod("show", "mondate", function(object) {
     cat('mondate: timeunits="', object@timeunits, '"\n', sep="")
-    print(noquote(as.character(object)))
+    print(noquote(
+        structure(as.character(object), dim=dim(object), dimnames=dimnames(object))
+        ))
     })
 
 ## HELPFUL USER FUNCTIONS

@@ -86,7 +86,7 @@ as.numeric(b)                # 1/31
 as.numeric(b, convert=TRUE)  # 1 (with a "days" attribute)
 as.Date(b)                   # displays as "2000-01-31"
 as.POSIXct(b)                # displays as "2000-01-31 UTC"
-weekdays(as.POSIXct(b))      # January 1, 2000 was a "Monday" (in English)
+weekdays(as.POSIXct(b))      # January 31, 2000 was a "Saturday" (in English)
 as.POSIXlt(b)$hour           # zero, as are ...$min and ...$sec
 }
 \keyword{methods}
