@@ -7,7 +7,7 @@
 \description{
 A \code{mondate} represents a date as a \code{numeric} equalling
 the number of months since the beginning of
-the current millennium. 
+the current millennium (the "mondate epoch"). 
 Somewhat arbitrarily, 
 and at the risk of reopening a decade-old debate, 
 "the beginning of the current millennium"
@@ -75,6 +75,11 @@ The mondate vector
 c(mondate("2008-12-31"), mondate("2009-12-31"))
 }
 could be used to represent such an interval.
+
+A \code{mondate} allows "infinite dates",
+which are helpful constructs for modeling "ultimate" events
+in actuarial, longitudinal, and time series analyses
+(see the \code{mondate} method for signature "numeric").
 
 A \code{mondate} has two important properties (in S4 parlance, "slots").
 The first is \code{displayFormat} which is the format 

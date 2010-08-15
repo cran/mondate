@@ -11,6 +11,7 @@
 \alias{day}
 \alias{mondate.mdy}
 \alias{mondate.ymd}
+\alias{ymd}
 \title{Useful Methods for Class mondate}
 \description{
 The methods in this section facilitate \code{mondate} construction
@@ -19,6 +20,11 @@ using the year, month, and day numbers of the date
 i.e.., "January" = 1 and the first day of a month = 1).
 }
 \usage{
+year(x, ...)
+month(x, ...)
+day(x, ...)
+ymd(x)
+
 mondate.mdy(m, d, y, displayFormat=.default.displayFormat,
             timeunits=.default.timeunits, ...)
 
@@ -27,11 +33,16 @@ mondate.ymd(y, m, d, displayFormat=.default.displayFormat,
 
 }
 \arguments{
+  \item{x}{
+an object of class "mondate"
+}
   \item{m}{
 the month: 1, ..., 12
 }
   \item{d}{
-the day: 1, ..., 31, depending on the month
+the day: 1, ..., 31, depending on the month. 
+If "missing" in the case of \code{mondate.ymd},
+the last day of the month is inserted.
 }
   \item{y}{
 the four-digit year
@@ -45,17 +56,36 @@ character string "months" (default), "years", or "days" indicating the units
 in which date arithmetic will be carried out.
 }
   \item{\dots}{
-arguments to be passed to the \code{mondate} constructor method.
+For \code{year}, \code{month}, and \code{day},
+not used.
+For \code{mondate.mdy} and \code{mondate.ymd}
+arguments to be passed to the \code{mondate} constructor.
 }
+}
+\value{
+\code{year} returns the year number (e.g., 2000) as a \code{numeric}.
+\code{month} returns the month number (1, ..., 12) as a \code{numeric}.
+\code{day} returns the day of the month as a \code{numeric} starting with 1.
+\code{ymd} returns a matrix with the number of rows equal to the
+length of \code{x} and with column 1 through 3 holding the \code{year},
+\code{month}, and \code{day}, respectively, and aptly named.
+
+\code{mondate.mdy} and \code{mondate.ymd} return "mondates" with the given
+month, day, and year. 
+Arguments \code{m}, \code{d}, and \code{y} may have length > 1.
+The usual recycling rules apply.
+If \code{d} is "missing" in a call to \code{mondate.ymd} then the date
+returned will be the last day of month \code{m} in year \code{y}.
+
 }
 \examples{
 M<-mondate.mdy(6,30,2008)
 year(M)     # 2008
 month(M)    # 6
 day(M)      # 30
-mondate.ymd(2008,6,30)  # the same
-mondate.ymd(2008,6)     # the same; when 'day' argument is missing 
-                        # defaults to last day of the month
+mondate.ymd(2008,6,30)  # ditto
+mondate.ymd(2008,6)     # ditto; 'day' argument is "missing" so
+                        # returns the last day of the month
 mondate.ymd(2008,1:12)  # all month-ends of 2008, a leapyear
 }
 \keyword{methods}

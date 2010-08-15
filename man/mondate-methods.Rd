@@ -21,7 +21,8 @@ mondate(x, displayFormat=.default.displayFormat,
 }
 \arguments{
   \item{x}{
-a R object to convert to a \code{mondate}. Can be another \code{mondate},
+an \R object to convert to a \code{mondate}. 
+Can be another \code{mondate},
 a character representing a date, a date, a numeric, or an object which
 converts to a numeric with as.numeric(x).
 More details below.
@@ -61,6 +62,10 @@ If \code{timeunits} = "days" then it is presumed
 that the value of x represents the number of days since the beginning
 of the millennium, 
 in which case the value is calculated using \code{as.Date}.
+
+Note that infinite values of \code{x} are allowed 
+("infinite" dates are helpful in modeling events "at ultimate"
+in actuarial, longitudinal, and time series analyses).
 }
 
 \item{\code{signature(x = "matrix")}}{
@@ -142,11 +147,17 @@ x <- 12*1:6
 y<-x+12
 mondate(cbind(x,y))  # bounding dates of first 6 years of millennium
 mondate(x)           # first 6 yearends
-(y<-mondate(1:6,timeunits="years")) # the same, but will show the results
-                     # of date arithmetic in "years" rather than "months"
+(y<-mondate(1:6,timeunits="years")) # Ditto. 
+# The results of date arithmetic on y will be displayed in "years".
+# E.g., the differences of y can be calculated as:
 tail(y,-1)-head(y,-1)# vector of five 1's, with "timeunits" attribute = 1
 as.numeric(x)
 as.numeric(y)        # the underlying numeric representations are the same
+
+# Demonstrating an "infinite" date
+y <- c(y,Inf)
+y                    # last element shows as Inf
+tail(y,-1)-head(y,-1)# last element is now infinity
 
 # The remaining examples point out a difference between zoo and mondate.
 #   zoo assumes that the zero-th part of a month or quarter is the first

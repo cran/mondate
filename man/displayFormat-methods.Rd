@@ -1,4 +1,4 @@
-\name{isplayFormat-methods}
+\name{displayFormat-methods}
 \docType{methods}
 \alias{mondateDisplayFormat-methods}
 \alias{mondateDisplayFormat,mondate-method}

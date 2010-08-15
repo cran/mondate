@@ -25,4 +25,5 @@ For more details see \code{base::format}.
 \examples{
 (b<-mondate(1))   # end of first month of millennium
 format(b)         # "01/31/2000" -- with quotes -- in the U.S. locale
+format(b, format="\%Y-\%m-\%d")  # "2000-12-31"
 }

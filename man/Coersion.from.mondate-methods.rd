@@ -19,13 +19,17 @@ and three classes of dates.
 \section{Methods}{
 \describe{
 
-\item{\code{as.character(x = "mondate", displayFormat, ...)}}{
+\item{\code{as.character(x = "mondate", format="", displayFormat, ...)}}{
     Coerce \code{mondate} to class \code{character}.
     Uses the \code{format} function.
     \describe{
-        \item{\code{displayFormat}}{
+        \item{\code{format}}{
             If \code{missing} the value is drawn from 
-            the property of the \code{mondate}.
+            the \code{displayFormat} property of \code{x}.
+            }
+        \item{\code{displayFormat}}{
+            Predecessor to \code{format} argument.
+            Still functional but deprecated as of 8/13/2010.
             }
         \item{\code{\dots}}{
             arguments passed to other methods (e.g., \code{format}).
@@ -80,6 +84,8 @@ and three classes of dates.
 \examples{
 (b<-mondate(1))              # end of first month of current millennium
 as.numeric(b)                # 1
+as.character(b)              # December 31, 2000 in date format of locale
+as.character(b, format="\%b-\%Y")  # "Dec-2000"
 as.numeric(b, convert=TRUE, timeunits="years") # converts to 1/12 "years"
 (b<-mondate(1, timeunits="days")) # end of first day of millennium
 as.numeric(b)                # 1/31
