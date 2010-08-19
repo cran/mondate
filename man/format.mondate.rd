@@ -17,10 +17,13 @@ further arguments passed to or from other methods.
 }
 }
 \details{
-For more details see \code{base::format}.
+For more details see \code{\link{format}} and especially \code{\link{strptime}}.
 }
 \value{
 \code{character} representation of the \code{mondate}.
+}
+\seealso{
+\code{\link{strptime}}.
 }
 \examples{
 (b<-mondate(1))   # end of first month of millennium

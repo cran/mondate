@@ -39,13 +39,16 @@
 
 ##  USEFUL INTERNAL FUNCTIONS
 
+# fyi: yr=Inf is not a leap year
 .is.leapyear<-function(yr) yr%%400==0 | (yr%%4==0 & yr%%100!=0)
 .daysinmonth<-function(yr,mo){
     if (length(yr)>length(mo)) mo<-rep(mo,length(yr)/length(mo)+1)[1:length(yr)]
     else
     if (length(yr)<length(mo)) yr<-rep(yr,length(mo)/length(yr)+1)[1:length(mo)]
+    # infinite month will produce NA's with a warning
     days<-.motbl[mo]
     days[.is.leapyear(yr)&mo==2]<-29
+    days[is.infinite(yr)]<-Inf # new as of 8/19/2010
     days
     }
 
@@ -669,11 +672,31 @@ mondate.mdy <- function(m,d,y, displayFormat=.default.displayFormat,
             ...)
 mondate.ymd <- function(y,m,d, displayFormat=.default.displayFormat, 
                                timeunits=.default.timeunits, ...) {
-    if (missing(d)) d<-.daysinmonth(y,m)
-    mondate(ISOdate(y,m,d),
-            displayFormat=displayFormat, 
-            timeunits=timeunits,
-            ...)
+    # With the understanding that any 'day' provided for an 'infinite year'
+    #   is NA, let the chips fall where they may in that situation
+    if (missing(d)) {
+        if (missing(m)) m <- 12
+        d <- .daysinmonth(y,m) # as of 8/19/2010 d=inf if y=inf
+        isf <- is.finite(d) # daysinmonth forces length d = max of y and m
+        if (all(isf)) mondate(ISOdate(y,m,d),
+                              displayFormat=displayFormat, 
+                              timeunits=timeunits,
+                              ...)
+        else {
+            md <- mondate(ISOdate(y,m,d),
+                              displayFormat=displayFormat, 
+                              timeunits=timeunits,
+                              ...)
+            nisf <- !isf
+            md[nisf] <- Inf
+            md[nisf & y[nisf]<0] <- -Inf
+            md
+            }
+        } 
+    else mondate(ISOdate(y,m,d), # chips are falling ... 
+                 displayFormat=displayFormat, 
+                 timeunits=timeunits,
+                 ...)
     }
 
 
@@ -735,4 +758,22 @@ head.mondate <- function(x, ...) {
 tail.mondate <- function(x, ...) {
     if (is.matrix(x)) tail.matrix(x, ...) 
     else NextMethod()
+    }
+
+diff.mondate <- function (x, lag = 1L, differences = 1L, ...) {
+    if (length(lag) > 1L || length(differences) > 1L || lag < 1L || differences < 1L)
+        stop("'lag' and 'differences' must be integers >= 1")
+    ismat <- is.matrix(x)
+    xlen <- if (ismat) dim(x)[1L]
+            else length(x)
+    if (lag * differences >= xlen)
+        return(mondate(timeunits = timeunits(x)))
+    r <- x
+    i1 <- -seq_len(lag)
+    if (ismat)
+        for (i in seq_len(differences)) r <- r[i1, , drop = FALSE] -
+            r[-nrow(r):-(nrow(r) - lag + 1L), , drop = FALSE]
+    else for (i in seq_len(differences)) r <- r[i1] - r[-length(r):-(length(r) -
+        lag + 1L)]
+    r
     }
