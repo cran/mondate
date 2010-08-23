@@ -81,12 +81,19 @@ month, day, and year.
 Arguments \code{m}, \code{d}, and \code{y} may have length > 1;
 the usual recycling rules apply.
 
+The \code{mondate.ymd} function has a bit more functionality.
 If \code{d} is "missing" in a call to \code{mondate.ymd} then the date
 returned will be the last day of month \code{m} in year \code{y}.
 If \code{m} is also missing, 
 then the date returned will be the last day of the year.
-Also in the case that \code{d} is "missing," 
-if \code{y=Inf} then the result will be an "infinite mondate."
+If any of \code{y}, \code{m}, or \code{d} are \code{NA}
+the result will be an all-\code{NA} vector.
+And if \code{y=+-Inf} then the result will be an "infinite" mondate vector,
+overriding other rules included herein.
+The length of a vector result is determined 
+using the usual recycling rules
+as though a valid, finite scalar had been inserted instead of
+\code{NA} or \code{+-Inf}.
 See the \bold{Examples} section.
 
 }
@@ -100,6 +107,9 @@ mondate.ymd(2008,6)     # ditto; 'day' argument is "missing" so
                         # returns the last day of the month
 mondate.ymd(2008,1:12)  # all month-ends of 2008, a leapyear
 # year-ends 2001 through 2010, displaying only the 4-digit year when shown
-mondate.ymd(2001:2010, displayFormat="\%Y")  
+mondate.ymd(2001:2010, displayFormat="\%Y")
+mondate.ymd(2010:2012, NA) # NA mondate vector of length 3
+mondate.ymd(Inf,11,31)  # An infinite mondate even though only 30 days in 
+                        # November
 }
 \keyword{methods}

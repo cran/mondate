@@ -42,14 +42,26 @@
 # fyi: yr=Inf is not a leap year
 .is.leapyear<-function(yr) yr%%400==0 | (yr%%4==0 & yr%%100!=0)
 .daysinmonth<-function(yr,mo){
+    # fixed bug when mo is NA 8/21/2010
     if (length(yr)>length(mo)) mo<-rep(mo,length(yr)/length(mo)+1)[1:length(yr)]
     else
     if (length(yr)<length(mo)) yr<-rep(yr,length(mo)/length(yr)+1)[1:length(mo)]
+    nna <- !is.na(yr) & !is.na(mo)
+    if (n<-sum(nna) == 0L) return(rep(NA, length(mo)))
+    ina <- !nna
+    N <- length(mo)
+    mo <- mo[nna]
+    yr <- yr[nna]
     # infinite month will produce NA's with a warning
-    days<-.motbl[mo]
-    days[.is.leapyear(yr)&mo==2]<-29
+    days <- .motbl[mo]
+    days[.is.leapyear(yr)&mo==2] <- 29
     days[is.infinite(yr)]<-Inf # new as of 8/19/2010
-    days
+    if (n>0) {
+        daze <- rep(NA, N)
+        daze[nna] <- days
+        daze
+        }
+    else days
     }
 
 ##  THE CLASS
@@ -672,12 +684,15 @@ mondate.mdy <- function(m,d,y, displayFormat=.default.displayFormat,
             ...)
 mondate.ymd <- function(y,m,d, displayFormat=.default.displayFormat, 
                                timeunits=.default.timeunits, ...) {
-    # With the understanding that any 'day' provided for an 'infinite year'
-    #   is NA, let the chips fall where they may in that situation
     if (missing(d)) {
         if (missing(m)) m <- 12
+        else m<-as.numeric(m)
+        y <- as.numeric(y)
         d <- .daysinmonth(y,m) # as of 8/19/2010 d=inf if y=inf
-        isf <- is.finite(d) # daysinmonth forces length d = max of y and m
+        # daysinmonth forces length d = max of y and m
+        # R considers NA's as "not finite", but ISOdate returns NA's
+        #   for NA days, so we'll allow NA values of d to be TRUE for "isf"
+        isf <- is.finite(d)|is.na(d) 
         if (all(isf)) mondate(ISOdate(y,m,d),
                               displayFormat=displayFormat, 
                               timeunits=timeunits,
@@ -693,12 +708,23 @@ mondate.ymd <- function(y,m,d, displayFormat=.default.displayFormat,
             md
             }
         } 
-    else mondate(ISOdate(y,m,d), # chips are falling ... 
+    else {
+        isinf <- is.infinite(y)
+        if (any(isinf)) {
+            z <- rep(NA, max(length(y), length(m), length(d)))
+            isfin <- !isinf
+            z[isfin] <- ISOdate(y[isfin],m[isfin],d[isfin])
+            z <- mondate(z, displayFormat=displayFormat, timeunits=timeunits, ...)
+            z[isinf] <- Inf
+            if (any(neg<-(y[isinf]<0))) z[isinf][neg] <- -Inf
+            z
+            }
+        else mondate(ISOdate(y,m,d), 
                  displayFormat=displayFormat, 
                  timeunits=timeunits,
                  ...)
+        }
     }
-
 
 ## S3 METHODS
 ##
