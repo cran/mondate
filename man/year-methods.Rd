@@ -1,4 +1,4 @@
-\name{year/month/day-methods}
+\name{year-month-day-methods}
 \docType{methods}
 \alias{year-methods}
 \alias{year,mondate-method}
