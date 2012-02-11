@@ -16,9 +16,17 @@
 All purpose \bold{mondate} constructor / coercer.
 }
 \usage{
-mondate(x, displayFormat=.default.displayFormat, 
-           timeunits=.default.timeunits, ...)
-}
+    mondate(x, displayFormat=.default.displayFormat, 
+               timeunits=.default.timeunits, ...)
+    \S4method{mondate}{mondate}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{numeric}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{Date}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{POSIXt}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{character}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{array}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{missing}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{ANY}(x, displayFormat, timeunits, ...)
+    }
 \arguments{
   \item{x}{
 an \R object to convert to a \code{mondate}. 
@@ -48,6 +56,16 @@ arguments to be passed to other methods.
 \section{Methods}{
 \describe{
 
+\item{\code{signature(x = "mondate")}}{
+For \code{mondate} x, this could be a way to copy a \code{mondate}
+and perhaps change 
+the \code{mondate}'s \code{displayFormat} or \code{timeunits} slots
+in the process.
+For any class that extends \code{mondate},
+use of this method will return the underlying mondate class without
+additional slots (if any) of the subclass.
+}
+
 \item{\code{signature(x = "numeric")}}{
 For \code{numeric} x, the simplest case is when \code{timeunits} = "months", 
 in which case
@@ -68,13 +86,6 @@ Note that infinite values of \code{x} are allowed
 in actuarial, longitudinal, and time series analyses).
 }
 
-\item{\code{signature(x = "matrix")}}{
-Dimensions and names are removed, 
-\code{mondate} is called on the vector version of x
-(numeric, character, etc.),
-then the dimensions and names are restored.
-}
-
 \item{\code{signature(x = "Date")}}{
 }
 \item{\code{signature(x = "POSIXt")}}{
@@ -84,26 +95,18 @@ millennium is calculated.
 }
 
 \item{\code{signature(x = "character")}}{
-For character x, if \code{displayFormat} is provided as an argument, 
-that format is used with
-\code{as.Date} to convert to a \code{mondate}.
-
-If no format successfully converts \code{x} to a date, 
+If \code{displayFormat} is provided, then that format
+is used to attempt to convert the character value to a date.
+Otherwose, 
+characters are converted to dates using the first format found in the 
+set of valid formats. 
+The current set is the vector 
+c("\%m/\%d/\%Y", "\%m-\%d-\%Y", "\%Y-\%m-\%d", "\%Y/\%m/\%d").
+If none of the valid formats successfully converts \code{x} to a date, 
 then as a last resort
 the character string is attempted to be coerced to a 
 \code{numeric} and then
 to a \code{mondate}.
-
-}
-
-\item{\code{signature(x = "mondate")}}{
-For \code{mondate} x, this could be a way to copy a \code{mondate}
-and perhaps change 
-the \code{mondate}'s \code{displayFormat} or \code{timeunits} slots
-in the process.
-For any class that extends \code{mondate},
-use of this method will return the underlying mondate class without
-additional slots (if any) of the subclass.
 }
 
 \item{\code{signature(x = "array")}}{
@@ -134,23 +137,23 @@ be \code{stop}ped.
 \examples{
 mondate("1-31-2010") # Jan. 31, 2010
 mondate(60)          # 60 months after 12/31/1999, so Dec. 31, 2004
-dat<-as.Date("2010-1-31")
-(M<-mondate(dat))    # Jan. 31, 2010
-x <- 12*1:6
-mondate(x)           # first 6 yearends
-y<-x+12
+dat <- as.Date("2010-1-31")
+(M <- mondate(dat))    # Jan. 31, 2010
+x <- 12 * 1:6
+mondate(x)           # first 6 yearends in 2000's
+y <- x + 12
 mondate(cbind(x,y))  # bounding dates of first 6 years of millennium
-(y<-mondate(1:6,timeunits="years")) # first 6 yearends, 'years' timeunits 
+(y <- mondate(1:6,timeunits="years")) # first 6 yearends, 'years' timeunits 
 # The results of date arithmetic on y will be displayed in "years".
 # E.g., the differences of y can be calculated as:
-tail(y,-1)-head(y,-1)# vector of five 1's, with "timeunits" attribute = "years"
+tail(y,-1) - head(y,-1)# vector of five 1's, with "timeunits" attribute = "years"
 as.numeric(x)
 as.numeric(y)        # the underlying numeric representations are the same
 
 # Demonstrating "infinite" dates
 y <- c(y,Inf)
 y                    # last element shows as Inf
-tail(y,-1)-head(y,-1)# last element is now infinity
+tail(y,-1) - head(y,-1)# last element is now infinity
 
 # The zoo examples point out a difference between zoo and mondate.
 #   zoo assumes that the zero-th part of a month or quarter is the first
@@ -160,20 +163,32 @@ tail(y,-1)-head(y,-1)# last element is now infinity
 #   zoo's sense converts to the end of the first day rather than
 #   the beginning.
 library(zoo)
-x<-ts(1:10, frequency = 4, start = c(1959, 2)) # starting 2nd qtr of 1959
+x <- ts(1:10, frequency = 4, start = c(1959, 2)) # starting 2nd qtr of 1959
 x
-mondate(x)
+# There is no method for class 'ts' so x is coerced (successfully) 
+#   because that class has an as.Date method, but with a warning.
+# The result is a vector of length 10 representing the close of business
+#   at the end of the first day of each of the given quarters.
+mondate(x)      
+
+# The yearmon class will identify any day in June 2010 with that month.
+as.yearmon("2010-6-15") 
 mondate(as.yearmon("2010-6-15"))         # end of first day of June 2010
 mondate(as.yearmon("2010-6-15"), frac=1) # end of  last day of June 2010
 mondate(as.yearqtr("2010-2"), frac=1)    # same
 
-# Changing the displayFormat
+# The if missing, displayFormat will be determined from the character input
 x <- mondate("2010-12-31")
+x               # x displays in the input European format
+# The provided, displayFormat must match the format of the character input
+#   or NA's will result.
+mondate("2010-12-31", displayFormat = "\%m-\%d-\%Y") # results in NA
+
 # Always display x using just the year
-x <- mondate(x,displayFormat="\%Y")
-x                # shows as just 2010
-month(x)         # 12
-day(x)           # 31
+x <- mondate(as.Date("2012-3-1"), displayFormat="\%Y")
+x                # shows as the year 2012, but month and day are nevertheless retained
+month(x)         # 3
+day(x)           # 1
 
 }
 

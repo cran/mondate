@@ -3,27 +3,19 @@ exportPattern("^[[:alpha:]]+")
 exportMethods(
     "[",
     "array",
-    "as.character",
-    "as.Date",
     "as.numeric",
-    "as.POSIXct",
-    "as.POSIXlt",
     "c",
 	cbind,
     "day",
 	mondateDisplayFormat,
 	displayFormat,
     "matrix",
-    "mean",
     "mondate",
     "month",
-    "print",
-    "rep",
 	rbind,
     "show",
 	mondateTimeunits,
 	timeunits,
-    "unique",
     "year" 
 )
 exportClasses(
@@ -36,3 +28,11 @@ S3method(seq, mondate)
 S3method(head, mondate)
 S3method(tail, mondate)
 S3method(diff, mondate)
+S3method(as.character, mondate)
+S3method(as.Date, mondate)
+S3method(as.POSIXct, mondate)
+S3method(as.POSIXlt, mondate)
+S3method(mean, mondate)
+S3method(print, mondate)
+S3method(rep, mondate)
+S3method(unique, mondate)

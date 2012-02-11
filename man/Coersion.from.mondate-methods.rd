@@ -1,14 +1,9 @@
 \name{Coersion-from-mondate methods}
 \docType{methods}
-\alias{as.character-methods}
-\alias{as.character,mondate-method}
+\alias{as.character.mondate}
 \alias{as.numeric,mondate-method}
-\alias{as.Date-methods}
-\alias{as.Date,ANY-method}
-\alias{as.Date,mondate-method}
-\alias{as.POSIXct,mondate-method}
+\alias{as.Date.mondate}
 \alias{as.POSIXct.mondate}
-\alias{as.POSIXlt,mondate-method}
 \alias{as.POSIXlt.mondate}
 \title{Coersion Methods for Mondates}
 \description{
@@ -16,10 +11,30 @@ Methods to coerce a \code{mondate} to other R objects.
 Currently that includes numbers, characters, 
 and three classes of dates.
 }
+\usage{
+ \S3method{as.character}{mondate}(x, format, ...)
+ \S3method{as.Date}{mondate}(x, ...)
+ \S3method{as.POSIXct}{mondate}(x, ...)
+ \S3method{as.POSIXlt}{mondate}(x, ...)
+ \S4method{as.numeric}{mondate}(x, convert = FALSE, stripdim = FALSE,  
+               timeunits = c("months", "years", "days"), 
+               ...)
+}
+
+\arguments{
+    \item{x}{a mondate}
+    \item{format}{the format to give the Date representation of x}
+    \item{\dots}{arguments passed to and from other methods}
+    \item{convert}{See Methods}
+    \item{stripdim}{See Methods}
+    \item{timeunits}{See Methods}
+    }
+
 \section{Methods}{
+
 \describe{
 
-\item{\code{as.character(x = "mondate", format="", displayFormat, ...)}}{
+\item{\code{as.character(x = "mondate", format, ...)}}{
     Coerce \code{mondate} to class \code{character}.
     Uses the \code{format} function.
     \describe{

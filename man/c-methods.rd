@@ -3,13 +3,12 @@
 \alias{c-methods}
 \alias{c,mondate-method}
 \alias{cbind}
-\alias{cbind-methods}
 \alias{cbind,mondate-method}
+\alias{cbind.mondate}
 \alias{rbind}
-\alias{rbind-methods}
 \alias{rbind,mondate-method}
-\alias{rep-methods}
-\alias{rep,mondate-method}
+\alias{rbind.mondate}
+\alias{rep.mondate}
 \title{Methods for Combining Mondates}
 \description{
 Methods to combine \code{mondate}s.
@@ -17,6 +16,21 @@ Methods to combine \code{mondate}s.
 \details{
 The package calls \code{setGeneric("c-rbind")}.
 }
+
+\usage{
+ \S3method{rep}{mondate}(x, \dots)
+ \method{cbind}{mondate}(\dots, deparse.level = 0)
+ \method{rbind}{mondate}(\dots, deparse.level = 1)
+ \S4method{c}{mondate}(x, ..., recursive = FALSE)
+}
+
+\arguments{
+    \item{x}{a mondate}
+    \item{deparse.level}{see \code{base::cbind}}
+    \item{recursive}{see \code{base::c}}
+    \item{\dots}{arguments passed to and from other methods}
+    }
+
 \section{Methods}{
 \describe{
 

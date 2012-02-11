@@ -1,28 +1,33 @@
 \name{Miscellaneous-methods}
 \docType{methods}
-\alias{mean-methods}
-\alias{mean,ANY-method}
-\alias{mean,mondate-method}
+\alias{mean.mondate}
 \alias{pmean}
 \alias{pmean-methods}
 \alias{pmean,mondate-method}
-\alias{unique-methods}
-\alias{unique,ANY-method}
-\alias{unique,mondate-method}
+\alias{unique.mondate}
 \title{Miscellaneous Methods for Mondates}
 \description{
 Miscellaneous \code{mondate} methods.
 }
+\usage{
+ \S3method{mean}{mondate}(x, trim = 0, na.rm = FALSE, \dots)
+ \S3method{unique}{mondate}(x, \dots)
+}
+
+\arguments{
+    \item{x}{a mondate}
+    \item{trim}{see \code{base::mean}}
+    \item{na.rm}{see \code{base::mean}}
+    \item{\dots}{arguments passed to and from other methods}
+    }
+
 \section{Methods}{
 \describe{
 
     \item{\code{mean(x = "mondate", ...)}}{
         Calculate the mean date of \code{mondate}s. 
-        Arguments in \code{\dots}
-        can be \code{mondate}s or R objects 
-        that can be coerced to a \code{mondate}.
-        Result will be a \code{mondate}
-        with properties equal to those of \code{x}.
+        Arguments \code{trim} and \code{na.rm} have the usual meaning
+        (see \code{base::mean}).
         }
 
     \item{\code{pmean(\dots = "mondate")}}{
