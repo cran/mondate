@@ -23,6 +23,8 @@ exportClasses(
 
 )
 S3method(as.data.frame, mondate)
+S3method(as.list, mondate)
+S3method(`names<-`, mondate)
 S3method(format, mondate)
 S3method(seq, mondate)
 S3method(head, mondate)

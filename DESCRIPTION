@@ -1,8 +1,8 @@
 Package: mondate
 Type: Package
 Title: Keep track of dates in terms of months
-Version: 0.9.9.01
-Date: 2012-02-11
+Version: 0.9.9.03
+Date: 2012-03-08
 Author: Dan Murphy
 Maintainer: Dan Murphy <chiefmurphy@gmail.com>
 Description: Keep track of dates in month units.  Perform date
@@ -13,6 +13,6 @@ URL: http://www.r-project.org, http://code.google.com/p/mondate/
 LazyLoad: yes
 Depends: utils, methods
 Suggests: zoo
-Packaged: 2012-02-11 14:25:56 UTC; Owner
+Packaged: 2012-03-09 03:57:03 UTC; Owner
 Repository: CRAN
-Date/Publication: 2012-02-12 06:23:04
+Date/Publication: 2012-03-09 10:12:25

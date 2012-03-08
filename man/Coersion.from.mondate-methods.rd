@@ -42,10 +42,6 @@ and three classes of dates.
             If \code{missing} the value is drawn from 
             the \code{displayFormat} property of \code{x}.
             }
-        \item{\code{displayFormat}}{
-            Predecessor to \code{format} argument.
-            Still functional but deprecated as of 8/13/2010.
-            }
         \item{\code{\dots}}{
             arguments passed to other methods (e.g., \code{format}).
             }

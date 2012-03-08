@@ -16,43 +16,50 @@
 All purpose \bold{mondate} constructor / coercer.
 }
 \usage{
-    mondate(x, displayFormat=.default.displayFormat, 
-               timeunits=.default.timeunits, ...)
+    mondate(x, 
+        displayFormat = getOption("mondate.displayFormat", default = .default.displayFormat), 
+        timeunits = getOption("mondate.timeunits", default = .default.timeunits),
+        ...)
     \S4method{mondate}{mondate}(x, displayFormat, timeunits, ...)
     \S4method{mondate}{numeric}(x, displayFormat, timeunits, ...)
     \S4method{mondate}{Date}(x, displayFormat, timeunits, ...)
     \S4method{mondate}{POSIXt}(x, displayFormat, timeunits, ...)
-    \S4method{mondate}{character}(x, displayFormat, timeunits, ...)
+    \S4method{mondate}{character}(x, displayFormat, timeunits, format = "", ...)
     \S4method{mondate}{array}(x, displayFormat, timeunits, ...)
     \S4method{mondate}{missing}(x, displayFormat, timeunits, ...)
     \S4method{mondate}{ANY}(x, displayFormat, timeunits, ...)
     }
 \arguments{
-  \item{x}{
-an \R object to convert to a \code{mondate}. 
-Can be another \code{mondate},
-a character representing a date, a date, a numeric, or an object which
-converts to a numeric with as.numeric(x).
-More details below.
-}
-  \item{displayFormat}{
-character string representing the date format with which to display 
-the \code{mondate}. 
-The default.displayFormat is determined according to Sys.getlocale("LC_TIME"):
-if it contains the words "United States", the default will be 
-"\%m/\%d/\%Y" 
-\cr
-(MM/DD/YYYY), otherwise "\%Y-\%m-\%d" (YYYY-MM-DD). 
-Other choices are "\%m-\%d-\%Y" and "\%Y/\%m/\%d".
-}
-  \item{timeunits}{
-character string "months" (default), "years", or "days" indicating the units
-in which date arithmetic will be carried out.
-}
-  \item{\dots}{
-arguments to be passed to other methods.
-}
-}
+    \item{x}{
+        an \R object to convert to a \code{mondate}. 
+        Can be another \code{mondate},
+        a character representing a date, a date, a numeric, or an object which
+        converts to a numeric with as.numeric(x).
+        More details below.
+        }
+    \item{displayFormat}{
+        character string representing the date format with which to display 
+        the \code{mondate}. 
+        The default.displayFormat is determined according to Sys.getlocale("LC_TIME"):
+        if it contains the words "United States", the default will be 
+        "\%m/\%d/\%Y" 
+        \cr
+        (MM/DD/YYYY), otherwise "\%Y-\%m-\%d" (YYYY-MM-DD). 
+        Other choices are "\%m-\%d-\%Y" and "\%Y/\%m/\%d".
+        }
+    \item{timeunits}{
+        character string "months" (default), "years", or "days" indicating the units
+        in which date arithmetic will be carried out.
+        }
+    \item{format}{
+        format string for converting a character to a Date 
+        (using \code{as.Date, x, format, ...})
+        from which the mondate value is determined.
+        }
+    \item{\dots}{
+    arguments to be passed to other methods.
+    }
+    }
 \section{Methods}{
 \describe{
 
@@ -95,18 +102,22 @@ millennium is calculated.
 }
 
 \item{\code{signature(x = "character")}}{
-If \code{displayFormat} is provided, then that format
+If \code{format} is provided, then that format
 is used to attempt to convert the character value to a date.
-Otherwose, 
+Otherwise, 
 characters are converted to dates using the first format found in the 
 set of valid formats. 
-The current set is the vector 
-c("\%m/\%d/\%Y", "\%m-\%d-\%Y", "\%Y-\%m-\%d", "\%Y/\%m/\%d").
+The current set of valid formts is
+"\%m/\%d/\%Y", "\%m-\%d-\%Y", "\%Y-\%m-\%d", and "\%Y/\%m/\%d".
 If none of the valid formats successfully converts \code{x} to a date, 
 then as a last resort
 the character string is attempted to be coerced to a 
 \code{numeric} and then
 to a \code{mondate}.
+If a format is found that converts x to a date, 
+then the successful format can be retained as the \code{displayFormat}
+of the \code{mondate} by specifying 
+\code{displayFormat = "keep"}.
 }
 
 \item{\code{signature(x = "array")}}{

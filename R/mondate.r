@@ -28,6 +28,7 @@
                    USb="%m-%d-%Y", 
                    EU="%Y-%m-%d", # EU format
                    EUb="%Y/%m/%d")
+
 .default.displayFormat <- ifelse (
     (length(grep("United States",Sys.getlocale("LC_TIME"))) +      # windows
      length(grep("en_US",        Sys.getlocale("LC_TIME")))) > 0L, # mac os X
@@ -76,8 +77,8 @@ setClass("mondate",
     contains = "numeric",
     prototype = prototype(
         numeric(0),
-        displayFormat = .default.displayFormat,
-        timeunits = .default.timeunits),
+        displayFormat = character(0),
+        timeunits = character(0)),
     S3methods = TRUE
     )
 
@@ -123,7 +124,11 @@ setReplaceMethod("timeunits", "mondate", function(x, value) {
 #setGeneric("mondate", function(x, displayFormat=.default.displayFormat, 
 #                               timeunits=.default.timeunits, ...) 
 #                      standardGeneric("mondate"))
-setGeneric("mondate", function(x, displayFormat = .default.displayFormat, timeunits = .default.timeunits, ...) standardGeneric("mondate"))
+setGeneric("mondate", function(x, 
+    displayFormat = getOption("mondate.displayFormat", default = .default.displayFormat), 
+    timeunits = getOption("mondate.timeunits", default = .default.timeunits), 
+    ...) standardGeneric("mondate"))
+
 setMethod("mondate", "mondate", function(x, displayFormat, timeunits, ...) {
     new("mondate",
         x@.Data,
@@ -132,9 +137,9 @@ setMethod("mondate", "mondate", function(x, displayFormat, timeunits, ...) {
     })
 
 setMethod("mondate", "numeric", function(x, displayFormat, timeunits, ...) {
-    if (timeunits == "months") new("mondate", x, timeunits = timeunits, ...)
+    if (timeunits == "months") new("mondate", x, displayFormat = displayFormat, timeunits = timeunits, ...)
     else
-    if (timeunits=="years")  new("mondate", 12 * x, timeunits = timeunits, ...)
+    if (timeunits=="years")  new("mondate", 12 * x, displayFormat = displayFormat, timeunits = timeunits, ...)
     else {
         # x represents the number of days since beginning of 01/01/2000
         x <- as.POSIXlt(as.Date(x, origin = .mondate.origin))
@@ -163,37 +168,46 @@ setMethod("mondate", "numeric", function(x, displayFormat, timeunits, ...) {
 setMethod("mondate", "Date",   .date.to.mondate)
 setMethod("mondate", "POSIXt", .date.to.mondate)
 
-setMethod("mondate", "character", function(x, displayFormat, timeunits, ...) {
+setMethod("mondate", "character", function(x, displayFormat, timeunits, format = "", ...) {
     # m is the first non-NA value in x. Use x[m] to find its best format
     m <- match(TRUE, !is.na(x))
     if (is.na(m)) # all-NA input
-        return(mondate(rep(NA, length(x)), displayFormat = displayFormat, ...))
-    # When no displayFormat is specified, find the first format that
+        return(mondate(rep(NA, length(x)), displayFormat = displayFormat, timeunits = timeunits, ...))
+    # When no date conversion format is specified, find the first format that
     #   can convert the input to a Date
-    if (missing(displayFormat)) {
+    if (format == "") {
         # Find best format for converting this character to date
         for (i in 1:length(.displayFormat)) {
             d <- as.Date(x[m], format = .displayFormat[i], ...)
             if (!is.na(d)) break
             }
         if (is.na(d)) {
-            warning("mondate character: first non-NA element '", x[m],
-                "' is not a date. Converting to numeric, then to mondate. Check results!")
-            return(mondate(as.numeric(x), timeunits = timeunits, ...))
-            }
-        displayFormat <- .displayFormat[i]
-        }
-    else {
-        # See if the displayFormat will convert the character
-        d <- as.Date(x[m], format = displayFormat, ...)
-        if (is.na(d)) {
-            warning("mondate character: first non-NA element '", x[m],
-                "' is not a date. Converting to numeric, then to mondate. Check results!")
+            msg <- paste("mondate character: first non-NA element '", x[m], "' is not a date.", sep = "")
+            msg <- c(msg, "\nConverting to numeric, then to mondate. Check results!")
+            if (displayFormat == "keep") {
+                displayFormat <- getOption("mondate.displayFormat", default = .default.displayFormat)
+                msg <- c(msg, '\ndisplayFormat = "keep" not applicable, using default.')
+                }
+            warning(msg) 
             return(mondate(as.numeric(x), displayFormat = displayFormat, timeunits = timeunits, ...))
             }
+        format <- .displayFormat[i]
         }
-    y <- as.Date(x, format = displayFormat, ...)
-    .date.to.mondate(y, displayFormat = displayFormat, timeunits = timeunits, ...)
+    # See if the format will convert the character
+    d <- as.Date(x[m], format = format, ...)
+    if (is.na(d)) {
+        msg <- paste("mondate character: first non-NA element '", x[m], "' is not a date.", sep = "")
+        msg <- c(msg, "\nConverting to numeric, then to mondate. Check results!")
+        if (displayFormat == "keep") {
+            displayFormat <- getOption("mondate.displayFormat", default = .default.displayFormat)
+            msg <- c(msg, '\ndisplayFormat = "keep" not applicable, using default.')
+            }
+        warning(msg) 
+        return(mondate(as.numeric(x), displayFormat = displayFormat, timeunits = timeunits))
+        }
+    y <- as.Date(x, format = format, ...)
+    if (displayFormat == "keep") displayFormat <- format
+    .date.to.mondate(y, displayFormat = displayFormat, timeunits = timeunits)
     })
 
 # mondates can hold their shape if they have dim attributes
@@ -224,6 +238,21 @@ as.mondate <- function(x, ...) mondate(x, ...)
 as.Date.mondate <- function(x, ...) {
     # 1/22/12 Removed attributes of x since Dates can't hold their shape
     x <- c(unclass(x))
+    # 3/8/12 If a mondate is assigned to the 'names' attribute of an ojbect 
+    #   within a 'structure' call, then when 'attributes(object)' is 
+    #   subsequently called, 'x' (the 'names' mondate) arrives here with mode 
+    #   'character' whose value = character representation of the mondate's 
+    #   underlying double. (I don't know why, but I believe it's buried in the 
+    #   primitive 'attributes' function.)
+    #   This generates an error with the 'floor' function. 
+    #   The following test avoids the error. 
+    #   Unfortunately by assigning 'names' via 'structure' the object's 
+    #   'names' display as the underlying double value, 
+    #   not the date value, when the object is printed. That is why this test
+    #   test simply returns the unclassed value of x.
+    #   Better to assign mondate names with the 'names' function:
+    #       names(object) <- mondate
+    if (mode(x) != "numeric") return(x)
     ym <- floor(x)
     y <- ym %/% 12L + .mondate.year.zero
     m <- ym %% 12 + 1
@@ -483,26 +512,25 @@ tail.mondate <- function(x, ...) {
     else NextMethod()
     }
 
-diff.mondate <- function (x, lag = 1L, differences = 1L, ...) {
-    if (length(lag) > 1L || length(differences) > 1L || lag < 1L || differences < 1L)
-        stop("'lag' and 'differences' must be integers >= 1")
-    ismat <- is.matrix(x)
-    xlen <- if (ismat) dim(x)[1L]
-            else length(x)
-    if (lag * differences >= xlen)
-        return(mondate(timeunits = timeunits(x)))
-    r <- x
-    i1 <- -seq_len(lag)
-    if (ismat)
-        for (i in seq_len(differences)) r <- r[i1, , drop = FALSE] -
-            r[-nrow(r):-(nrow(r) - lag + 1L), , drop = FALSE]
-    else for (i in seq_len(differences)) r <- r[i1] - r[-length(r):-(length(r) - lag + 1L)]
-    r
-    }
+diff.mondate <- function(x, lag = 1L, differences = 1L, ...)
+    structure(diff(as.numeric(x, convert = TRUE)
+                   , lag = lag
+                   , differences = differences)
+              , timeunits = timeunits(x)
+              )
 
 print.mondate <- function(x, ...) {
     print(noquote(as.character(x)), ...)
     invisible(x)
+    }
+
+# 3/8/12 So mondates can be X arguments in '*apply' functions:
+as.list.mondate <- function(x, ...) lapply(X = NextMethod(), FUN = mondate)
+# 3/8/12 So mondates can be assigned names (which worked before but caused
+#           an error message    
+`names<-.mondate` <- function(x, value) {
+    names(x@.Data) <- value
+    x
     }
 
 ## HELPFUL USER FUNCTIONS
@@ -537,17 +565,86 @@ ymd <- function(x) {
     cbind(year = y, month = m, day = d)
     }
 
+# 3/8/12 Modified so results inherit names, dim, dimnames.
 setGeneric("year", function(x, ...) standardGeneric("year"))
-setMethod("year", "mondate", function(x) ymd(x)[,"year"])
+setMethod("year", "mondate", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- ymd(x)[, "year"]
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
 setGeneric("month", function(x, ...) standardGeneric("month"))
-setMethod("month", "mondate", function(x) ymd(x)[,"month"])
+setMethod("month", "mondate", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- ymd(x)[, "month"]
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
 setGeneric("day", function(x, ...) standardGeneric("day"))
-setMethod("day", "mondate", function(x) ymd(x)[,"day"])
+setMethod("day", "mondate", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- ymd(x)[, "day"]
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
 
-setGeneric("MonthsBetween", function(from,to) standardGeneric("MonthsBetween"))
-setMethod("MonthsBetween", c("mondate","mondate"), function(from, to) structure(unclass(to) - unclass(from), displayFormat = NULL, timeunits = NULL, .S3Class = NULL))
+setGeneric("MonthsBetween", function(from, to) standardGeneric("MonthsBetween"))
+setMethod("MonthsBetween", c("mondate", "mondate"), function(from, to) {
+    if (length(from) >= length(to)) {
+        dims <- dim(from)
+        dimnams <- dimnames(from)
+        }
+    else {
+        dims <- dim(to)
+        dimnams <- dimnames(to)
+        }
+    y <- c(as.numeric(to)) - c(as.numeric(from))
+    structure(
+        y
+        , dim = dims
+        , dimnames = dimnams
+        , timeunits = "months"
+        , .S3Class = NULL
+        )
+    })
 setGeneric("YearsBetween", function(from, to) standardGeneric("YearsBetween"))
-setMethod("YearsBetween", c("mondate", "mondate"), function(from, to) structure((unclass(to) - unclass(from)) / 12, displayFormat = NULL, timeunits = NULL, .S3Class = NULL))
+setMethod("YearsBetween", c("mondate", "mondate"), function(from, to) {
+    if (length(from) >= length(to)) {
+        dims <- dim(from)
+        dimnams <- dimnames(from)
+        }
+    else {
+        dims <- dim(to)
+        dimnams <- dimnames(to)
+        }
+    y <- c(as.numeric(to)) - c(as.numeric(from))
+    y <- y / 12
+    structure(
+        y
+        , dim = dims
+        , dimnames = dimnams
+        , timeunits = "years"
+        , .S3Class = NULL
+        )
+    })
 setGeneric("DaysBetween", function(from, to) standardGeneric("DaysBetween"))
 setMethod("DaysBetween", c("mondate", "mondate"), function(from, to) {
     if (length(from) >= length(to)) {
@@ -558,7 +655,13 @@ setMethod("DaysBetween", c("mondate", "mondate"), function(from, to) {
         dims <- dim(to)
         dimnams <- dimnames(to)
         }
-    structure(unclass(as.Date(to) - as.Date(from)), dim = dims, dimnames = dimnams, units = NULL)
+    structure(
+        round(abs(unclass(as.Date(to) - as.Date(from))))
+        , dim = dims
+        , dimnames = dimnams
+        , units = NULL
+        , timeunits = "days"
+        )
     })
 
 ## Constructing with month, year, and day numbers
