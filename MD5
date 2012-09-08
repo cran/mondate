@@ -1,7 +1,7 @@
-31bd245bc5e4a75f27591c671e1ce4ec *DESCRIPTION
-3831557e81868ebcef226d0f0ca00c6a *NAMESPACE
-bbf81b0280d64d0b192a349a530903c4 *NEWS
-2f523a27ad6a54733c0f4aa5c893c587 *R/mondate.r
+3c7e8be204837c4482b9b5c2fe270be7 *DESCRIPTION
+3c61e30585499db7d0b8bdb63faaa8ab *NAMESPACE
+b966553c27fe3b7e614f0d6dc19318f0 *NEWS
+9dea51dc40c8c08909b4313292427e53 *R/mondate.r
 4bf810c23d5c431ccb4a633e9bfc1655 *man/Arith-methods.Rd
 5369a2aded2f1abfcd5c401dac9512b6 *man/Coersion.from.mondate-methods.rd
 236ff7b9bba2678e94231545b4ab44d8 *man/Compare-methods.rd
@@ -10,7 +10,7 @@ bbf81b0280d64d0b192a349a530903c4 *NEWS
 b4c22bdc20cad464baac815b48c6ab9b *man/as.data.frame.mondate.Rd
 96d9ac511521fb65227b74ee7c116dbc *man/as.list.mondate.Rd
 56c1f8809446eb39f03d6cad89853655 *man/as.mondate.rd
-ef2c127b67d46c64930e376f4b95f361 *man/c-methods.rd
+416645ad2d63815a7ddac54b0a1dd195 *man/c-methods.rd
 3dd9f0ced8fe9b03b8c4e8aa080c07e0 *man/diff.mondate.Rd
 02432fbacf4121333e3a4905dda15f5f *man/displayFormat-methods.Rd
 99f3c802c49ac04251b1f79daff9d7c5 *man/format.mondate.rd
