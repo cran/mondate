@@ -1,7 +1,7 @@
-c3b7fa0a443ebe8a86206bb741425fe1 *DESCRIPTION
+a66e6c332f40ea89c3b1c469c8d85378 *DESCRIPTION
 3c61e30585499db7d0b8bdb63faaa8ab *NAMESPACE
 b966553c27fe3b7e614f0d6dc19318f0 *NEWS
-e63a9b10414379c7e94c03fadfafd2ab *R/mondate.r
+d650484a2359b00d1d3731c6cb3afc3e *R/mondate.r
 4bf810c23d5c431ccb4a633e9bfc1655 *man/Arith-methods.Rd
 5369a2aded2f1abfcd5c401dac9512b6 *man/Coersion.from.mondate-methods.rd
 236ff7b9bba2678e94231545b4ab44d8 *man/Compare-methods.rd
@@ -17,7 +17,7 @@ b4c22bdc20cad464baac815b48c6ab9b *man/as.data.frame.mondate.Rd
 5abe4b6f299dfc3f9a237eb262a8d769 *man/matrix-methods.rd
 7c79ded580906c1ec8e15147e3e294ed *man/misc-methods.Rd
 7eb086c976c291333f83c63ef2c8b806 *man/mondate-class.Rd
-c5f33eccdadf4a8f02404e05e81a957a *man/mondate-methods.Rd
+2a44668b3ece765b80bd9d72f14cf522 *man/mondate-methods.Rd
 42daec6b33238cd8c53e72fbd7136358 *man/names.mondate.rd
 8772d6ab6ca5d45d8512fc873b1633cc *man/print-methods.Rd
 477d341efc879331624b1e9ee4f3feca *man/seq.mondate.Rd

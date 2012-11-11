@@ -181,7 +181,7 @@ setMethod("mondate", "character", function(x, displayFormat = "keep", timeunits,
     isnax <- is.na(x)
     m <- match(TRUE, !isnax)
     if (is.na(m)) # all-NA input
-        return(mondate(rep(NA, length(x)), displayFormat = displayFormat, timeunits = timeunits, ...))
+        return(mondate(as.Date(rep(NA, length(x))), displayFormat = displayFormat, timeunits = timeunits, ...))
     # When no date conversion format is specified, find the first format that
     #   can convert the input to a Date
   mf <- missing(format)
@@ -227,6 +227,8 @@ setMethod("mondate", "character", function(x, displayFormat = "keep", timeunits,
   if (any(is.na(z) & !isnax)) warning("format '", format, "' did not convert some characters into dates")
   z
   })
+
+setMethod("mondate", "factor", function(x, displayFormat = "keep", timeunits, ...) mondate(as.character(x), displayFormat, timeunits, ...))
 
 # mondates can hold their shape if they have dim attributes
 setMethod("mondate", "array", function(x, displayFormat, timeunits, ...)
