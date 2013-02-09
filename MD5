@@ -1,7 +1,7 @@
-a66e6c332f40ea89c3b1c469c8d85378 *DESCRIPTION
+3c5dbd70f78b43e8686976b170c3d1ea *DESCRIPTION
 3c61e30585499db7d0b8bdb63faaa8ab *NAMESPACE
-b966553c27fe3b7e614f0d6dc19318f0 *NEWS
-d650484a2359b00d1d3731c6cb3afc3e *R/mondate.r
+0f31991daa4468fd3b9e3fae88c11c15 *NEWS
+9dbb7685f344ad1340c45a0f05eac448 *R/mondate.r
 4bf810c23d5c431ccb4a633e9bfc1655 *man/Arith-methods.Rd
 5369a2aded2f1abfcd5c401dac9512b6 *man/Coersion.from.mondate-methods.rd
 236ff7b9bba2678e94231545b4ab44d8 *man/Compare-methods.rd
@@ -22,5 +22,5 @@ b4c22bdc20cad464baac815b48c6ab9b *man/as.data.frame.mondate.Rd
 8772d6ab6ca5d45d8512fc873b1633cc *man/print-methods.Rd
 477d341efc879331624b1e9ee4f3feca *man/seq.mondate.Rd
 ee0c3914079169d5841ec2622176625a *man/timeunits-methods.Rd
-46ebe281d63e19c35a5df3ef0c253f42 *man/year-methods.Rd
+db5974b3fd14246735ff82b3f14f0356 *man/year-methods.Rd
 1539ee47ba228cd206025ba69a7a184d *man/z[-methods.Rd

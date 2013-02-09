@@ -579,6 +579,8 @@ as.list.mondate <- function(x, ...) lapply(X = NextMethod(), FUN = mondate)
 
 ## Pulling out month, year, and day numbers
 ymd <- function(x) {
+    nms <- names(x)
+    x <- mondate(x)
     xd <- x@.Data
     ym <- floor(xd)
     y <- ym %/% 12L + .mondate.year.zero
@@ -604,6 +606,7 @@ ymd <- function(x) {
     y[nna] <- ynna
     m[nna] <- mnna
     d[nna] <- dnna
+    names(y) <- nms
     cbind(year = y, month = m, day = d)
     }
 
@@ -614,6 +617,30 @@ setMethod("year", "mondate", function(x) {
     dmnms <- dimnames(x)
     nms <- names(x)
     y <- ymd(x)[, "year"]
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
+setMethod("year", "Date", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- as.numeric(format(x, "%Y"))
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
+setMethod("year", "POSIXt", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- as.numeric(format(x, "%Y"))
     if (!is.null(dm)) {
         dim(y) <- dm
         dimnames(y) <- dmnms
@@ -634,12 +661,60 @@ setMethod("month", "mondate", function(x) {
     else names(y) <- nms
     y
     })
+setMethod("month", "Date", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- as.numeric(format(x, "%m"))
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
+setMethod("month", "POSIXt", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- as.numeric(format(x, "%m"))
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
 setGeneric("day", function(x, ...) standardGeneric("day"))
 setMethod("day", "mondate", function(x) {
     dm <- dim(x)
     dmnms <- dimnames(x)
     nms <- names(x)
     y <- ymd(x)[, "day"]
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
+setMethod("day", "Date", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- as.numeric(format(x, "%d"))
+    if (!is.null(dm)) {
+        dim(y) <- dm
+        dimnames(y) <- dmnms
+        }
+    else names(y) <- nms
+    y
+    })
+setMethod("day", "POSIXt", function(x) {
+    dm <- dim(x)
+    dmnms <- dimnames(x)
+    nms <- names(x)
+    y <- as.numeric(format(x, "%d"))
     if (!is.null(dm)) {
         dim(y) <- dm
         dimnames(y) <- dmnms
