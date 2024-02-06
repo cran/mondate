@@ -73,7 +73,7 @@ e.g., \code{displayFormat} and \code{timeunits}.
 \value{
 \code{year} returns the year \code{numeric} (e.g., 2000).
 
-\code{month} returns the month \code{numeric} {1, ..., 12}.
+\code{month} returns the month \code{numeric} 1, ..., 12.
 
 \code{day} returns the \code{numeric} day of the month.
 

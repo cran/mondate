@@ -9,11 +9,14 @@ as.difftime(tim, format = "\%X", units = "auto")
 }
 \arguments{
 \item{tim}{
+  character string or numeric value specifying a time interval.
 }
 \item{format}{
+  character specifying the format of tim: see \link{strptime}.
+  The default is a locale-specific time format.
 }
 \item{units}{
-  Anything allowed by \code{base:::as.difftime}.
+  Anything allowed by \link[base]{as.difftime}.
   In addition, can be "months" or "years" in which case 
   \code{tim} must be numeric.
 }
@@ -21,10 +24,10 @@ as.difftime(tim, format = "\%X", units = "auto")
 \details{
 Primarily used to facilitate adding months and years to 
 \code{mondate}s.
-See base:::as.difftime.
+See \link[base]{as.difftime}.
 }
 \value{
-See base:::as.difftime.
+See \link[base]{as.difftime}.
 }
 \author{
 Dan Murphy.

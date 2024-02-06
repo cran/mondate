@@ -1,7 +1,7 @@
-6ba0604541d7e4d192c0d5c6c79083e9 *DESCRIPTION
+563cd6e8fbba2b154afc4a52e91d15e8 *DESCRIPTION
 17c0970e8c7b6a6bd33e0c66fe6dc514 *LICENSE
 e53447550091ce4a72e64c46aaa6a895 *NAMESPACE
-8125c4218c1a6490980c9435fc5cd6bd *NEWS
+98858777c46effe096c529bd0b892aac *NEWS
 2214625d4315f33e53568402bb40f01b *R/mondate.r
 aaf7bcfb405fa7cfc03d9b567c828a23 *inst/readme.rmd
 7ff7b3d481b48f78288616067dab9183 *man/Arith-methods.Rd
@@ -12,7 +12,7 @@ cb0efb56a1dbea00392a498912bfb423 *man/YearQuartersFormat.rd
 b52ea69a0c0d351ef77732940cca3002 *man/add.rd
 97f39a7f04c6c4135d0b0e29a163701b *man/array-methods.Rd
 b4c22bdc20cad464baac815b48c6ab9b *man/as.data.frame.mondate.Rd
-44e3935cb60e5cc75ee8721cef61fef3 *man/as.difftime.rd
+50a7e2d2c53fededfd038d5fab1668e1 *man/as.difftime.rd
 96d9ac511521fb65227b74ee7c116dbc *man/as.list.mondate.Rd
 56c1f8809446eb39f03d6cad89853655 *man/as.mondate.rd
 416645ad2d63815a7ddac54b0a1dd195 *man/c-methods.rd
@@ -31,5 +31,5 @@ a75399ee1203c08c42c0dac13d2b75df *man/mondate-methods.Rd
 477d341efc879331624b1e9ee4f3feca *man/seq.mondate.Rd
 2cb9f8d8790e421cda27bb77321aa96b *man/subtract.rd
 346ee684239f29b649fec22ac71f79de *man/timeunits-methods.Rd
-8beb8ff77de05bdbdfd50a852221217e *man/year-methods.Rd
+97cd63e09a008320fb5db04166b557f7 *man/year-methods.Rd
 1539ee47ba228cd206025ba69a7a184d *man/z[-methods.Rd
